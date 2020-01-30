@@ -1,0 +1,11 @@
+{
+  "description": "12-3 10 Calibro model",
+  "name": "12-3 10 Calibro model",
+  "service_id": "6a83eb2e-d222-11e8-858b-525400ae9f4a",
+  "parameters": [
+    {
+      "value": 100,
+      "name": "name parameter"
+    }
+  ]
+}

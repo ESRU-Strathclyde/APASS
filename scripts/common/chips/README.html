@@ -1,0 +1,165 @@
+<html>
+<head>
+  <style>
+    pre {font-size:large;display:inline}
+  </style>
+</head>
+<body>
+<h2>Hit2Gap data transfer with Strathclyde University and associated activities</h2>
+
+<h4> This document explains how to transfer data from/to Hit2Gap portal and associated activities. It assumes access to a bash or similar shell with python3 installed. Source files may be obtained from <pre>I/ESRU/Root/Projects/H2020/HIT2GAP/Linking_to_Nobatek_portal/H2G_linking</pre></h4>
+<h4><a href="https://h2g-platform-core.nobatek.com/api/v0/api-docs/redoc">Hit2Gap API</a> can be consulted for complementary information</h4>
+
+<h4>Table of contents</h4>
+<ul>
+  <li><a href="#toc1">Download data from portal</a></li>
+  <li><a href="#toc2">Get command used to get data</a></li>
+  <li><a href="#toc3">Upload data from portal</a></li>
+  <li><a href="#toc4">Get session cookie</a></li>
+  <li><a href="#toc5">Make ESP-r climate file from previous day's data</a></li>
+  <li><a href="#toc6">Add model to portal</a></li>
+  <li><a href="#toc10">Index of files in this folder</a></li>
+  <!--
+  <li><a href="#toc7"></a></li>
+  <li><a href="#toc8"></a></li>
+  -->
+</ul>
+
+<h3 id="toc1">Get data from portal</h3>
+<ol>
+  <li>Get name of sensor_id (currently by appending NUIG_ or CHA_ to sensor name taken from column <pre>Measure ID</pre> of sheet <pre>Challenger</pre> or <pre>NUIG</pre> of file <pre>I/ESRU/Root/Projects/H2020/HIT2GAP/Linking_to_Nobatek_portal/Challenger.xlsx)</pre></li>
+  <li>Write this name in <pre>var2get</pre> along with start and end times of required data acquisition period</li>
+  <li>Add the name to <pre>var2get.dictionary</pre> so that the next time you do not have to look in the <pre>xlsx</pre> files</li>
+  <li>Delete from <pre>var2get</pre> any previously added sensor names that you do not require data for</li>
+  <li>Issue command <pre>./chips -g</pre> to get data for all sensors and times listed in <pre>var2get</pre>. Resulting json files have names as listed in <pre>var2get</pre></li>
+</ol>
+
+<h3 id="toc2">Get curl commands used to get data</h3>
+<ol>
+  <li>Same as <strong>Get data from portal</strong> section but use <pre>./chips -k</pre></li>
+</ol>
+
+<h3 id="toc3">Upload data to portal</h3>
+<ol>
+  <li>Get sensor name as described in <strong>Get data from portal</strong> section</li>
+  <li>Update variable called <pre>server_path</pre> in <pre>patch.py</pre> to include this name</li>
+  <li>Change name of <pre>json</pre> file to be uploaded to <pre>data2upload</pre></li>
+  <li>Issue command <pre>python3 patch.py</pre></li>
+</ol>
+
+<h3 id="toc4">Get session cookie</h3>
+<ol>
+  <li>The PEM certificate issued to Strathclyde University is called <pre>uos_bps.keycrt.pem</pre>. As per advice from Nobatek ssl certificate authentication is active but data cannot be uploaded or downloaded using this protocol. A session can be started with Nobatek server (portal) using this method though.</li>
+  <li><pre>./chips</pre> establishes a connection using ssl certificate and gets a session_cookie</li>
+</ol>
+
+<h3 id="toc5">Make ESP-r climate file with data from previous day</h3>
+<ol>
+<li>For every climate location for which a climate file is required make a file called <pre>location_name.clmvar</pre> where location_name could be any string (e.g. NUIG, Belfast, Glasgow_Airport etc). This file is similar to <pre>var2get</pre> but has only the sensor name in order: diffuse solar, dry bulb temperature, direct solar, wind speed, wind direction, relative humidity. This file informs the scripts which sensors to use for each climate location</li>
+<li>Make sure the variables listed in each <pre>*.clmvar</pre> file are also listed in the <pre>var2get</pre> file (do not need to include correct time as this will automatically be changed to the previous day)</li>
+<li><pre>./chips -g -p</pre> will get data for all sensors as listed in <pre>var2get</pre> (<pre>-g</pre> = get data) and (<pre>-p</pre> = for previous day, note that -p ignores start and end times listed in <pre>var2get</pre>)</li>
+<li>Now create ESP-r ASCII weather files. This command assumes there are one or more <pre>location_name.clmvar</pre> files present which hold sensor names to be used for creating weather files for each location_name. The command used is <pre>python3 mkespclm.py</pre> which creates a <pre>location_name.clm.a</pre> file for each <pre>*.clmvar</pre> file</li>
+</ol>
+
+<h3 id="toc6">Add model to portal</h3>
+<ol>
+  <li>Edit the file <pre>mk_event.py</pre> to include details of the event (as described in <pre>mk_event.py</pre> and <a href="https://h2g-platform-core.nobatek.com/api/v0/api-docs/redoc#tag/events/paths/~1events~1/post">Hit2Gap API</a>)</li>
+  <li><pre>python3 mk_event.py</pre> creates the event</li>
+</ol>
+
+<h3 id="toc10">File index</h3>
+<table border="1">
+  <tr>
+    <td>File name</td>
+    <td>Function<a href="#function">*</a></td>
+    <td>Type</td>
+    <td>Function</td>
+  </tr>
+  <tr>
+    <td>chips</td>
+    <td>Directly called</td>
+    <td>bash script</td>
+    <td>Main script to invoke when downloading data and when requesting session cookie. It is wrapper for curl. </td>
+  </tr>
+  <tr>
+    <td>data2upload</td>
+    <td>Directly edited</td>
+    <td>ASCII json text</td>
+    <td>File holding data (timestamp,value,quality) that will be uploaded to portal. Does not contain object/sensor to which it will be linked (this is found in patch.py)</td>
+  </tr>
+  <tr>
+    <td>get_cookie.py</td>
+    <td>Supporting</td>
+    <td>Python script</td>
+    <td>Check if session cookie is valid (less than 1hour old). If not then get another one</td>
+  </tr>
+  <tr>
+    <td>mkespclm.py</td>
+    <td>Directly called</td>
+    <td>Python script</td>
+    <td>For every (climate) variable listed in every [location].clmvar file create ESP-r climate file. It assumes that ./chips -g -p has already been run and that all variables in clmvar files are already present in var2get. So <strong>example usage should be preceeded by the ./chips -g -p command</strong></td>
+  </tr>
+  <tr>
+    <td>old_mk_event.py</td>
+    <td>Obsolete</td>
+    <td>Python script</td>
+    <td>Create event on portal</td>
+  </tr>
+  <tr>
+    <td>NUIG.clmvar</td>
+    <td>Directly edited/supporting</td>
+    <td>ASCII text</td>
+    <td>Holds sensor/object names representing the 6 ESP_r climate variables with 0 for any sensors that are missing (leading to 0 for that entry in the resulting ESP-r file)</td>
+  </tr>
+  <tr>
+    <td>old_patch.py</td>
+    <td>Obsolete</td>
+    <td>Python script</td>
+    <td>Contains examples of how to access portal using username and password (now obsolete), a rudimentary GET example and a PATCH example with payload within the file</td>
+  </tr>
+  <tr>
+    <td>patch.py</td>
+    <td>Directly called</td>
+    <td>Python script</td>
+    <td>PATCH data to portal using data already written in data2upload</td>
+  </tr>
+  <tr>
+    <td>README.html</td>
+    <td>NA</td>
+    <td>html text</td>
+    <td>Help file</td>
+  </tr>
+  <tr>
+    <td>session_cookie</td>
+    <td>Not to be edited</td>
+    <td>ASCII text</td>
+    <td>holds the session cookie variable and may be updated when invoking chips whether directly or from get_cookie.py</td>
+  </tr>
+  <tr>
+    <td>uos_bps.keycrt.pem</td>
+    <td>Not to be edited</td>
+    <td>ASCII text</td>
+    <td>SSL user certificate issues by Nobatek to Strathclyde University</td>
+  </tr>
+  <tr>
+    <td>var2get</td>
+    <td>Directly edited</td>
+    <td>ASCII csv text</td>
+    <td>Holds sensor/object names and start and stop timestamps for chips. When chips is invoked data for these sensors is downloaded</td>
+  </tr>
+  <tr>
+    <td>var2get.dictionary</td>
+    <td>Directly edited</td>
+    <td>ASCII text</td>
+    <td>Holds names of any sensors/objects that the user may need to populate var2get from</td>
+  </tr>
+</table>
+
+<p id="function">
+  *Functions are described below</br>
+  Directly called scripts are invoked on the command line</br>
+  Directly edited text files are to be edited using a text editor</br>
+  Supporting scripts are not invoked by user but by directly called scripts</br>
+</p>
+</body>
+</html>

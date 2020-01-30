@@ -1,0 +1,249 @@
+#!/bin/bash
+
+# defaults...
+default_cert="uos_bps.keycrt.pem"
+credentials="h2g-dev:geir5Bup"
+portal_credentials="user1@mail.fr:user1"
+default_host="https://h2g-platform-core.nobatek.com/api/v0"
+default_auth_path="/auth/cert"
+default_demo_path="/auth/demo/private/roles/1"
+timeseries="/timeseries"
+
+# init...
+help=0
+demo=0
+data=0
+doit=1
+cert=$default_cert
+host=$default_host
+auth_path=$default_auth_path
+prev_day=0
+stats=0
+session_cookie="no session cookie provided"
+
+# Process command line options
+if [ $# -ne 0 ]; then
+  for i do
+    case "$i" in
+      -h | --help)         help=1;               shift;;
+      -c | --cert)  shift;         cert=$1;      shift;;
+      -a | --auth)  shift;         auth_path=$1; shift;;
+      -d | --demo)  shift; demo=1; demo_path=$1; shift;;
+      -g | --get_data)     data=1;               shift;;
+      -p | --prev_day)     prev_day=1; data=1;   shift;;
+      -k | --kidding)      doit=0;               shift;;
+      -s | --stats)        stats=1;      shift;;
+    esac
+  done
+fi
+
+if [ $help -eq 1 ]; then
+  echo "                   ---  CHIPS ---"
+  echo " C                  HI      P          S"
+  echo " Communicating with HIt2gap Portal for Strathclyde university"
+  echo " "
+  echo " chips is a BASH script used to invoke curl commands "
+  echo " for interaction with Hit2Gap portal"
+  echo " "
+  echo " This script connects to the server/portal and performs"
+  echo " various tasks e.g. getting data, session cookie, "
+  echo " demonstrating connectivity etc."
+  echo " "
+  echo " Command line arguments:"
+  echo " Note that these have to be specified individually and "
+  echo " cannot be concatenated (-c -d is okay but not -cd)"
+  echo " "
+  echo "   -a, --auth path_to_authentication_by_certificate"
+  echo "       Use this path for authenticating your certificate "
+  echo "       If -a not specified defaults to "$default_auth_path
+  echo " "
+  echo "   -c, --cert authentication_certificate.pem"
+  echo "       Setup session by making initial connection with server "
+  echo "       and getting session cookie. This is generally the first"
+  echo "       step in using this tool"
+  echo "       If -c not specified defaults to "$default_cert
+  echo " "
+  echo "   -d, --demo path_to_test_connection"
+  echo "       Use this path for authenticating your certificate "
+  echo "       If not specified defaults to "$default_demo_path
+  echo " "
+  echo "   -h, --help"
+  echo "       Display this help message"
+  echo " "
+  echo "   --host host_url_to_connect_to"
+  echo "       Specify which url/domain to connect to"
+  echo "       If not specified defaults to "$host
+  echo " "
+  echo "   -g, --get_data"
+  echo "       Get data based on measure, start and end time given in var2get"
+  echo "       Format of var2get is variable_name,start_time,end_time. Exact"
+  echo "       format for these variables is documented in H2G API"
+  echo " "
+  echo "   -p, --get_previous_day_only"
+  echo "       Get data based on measure as given in var2get for previous day"
+  echo "       Start and end time is from 0000 to 2400 the previous day"
+  echo " "
+  echo "   -s, --stats"
+  echo "       Return statistics for sensors in var2stat"
+  echo " "
+  echo "   -k, --kidding"
+  echo "       Do not get data but only display intended curl command"
+  echo " "
+  echo "  Example usage"
+  echo "    1. ./comm_portal.bash -c [authentication_certificate.pem]"
+  echo "           connects to portal and gets session cookie"
+  echo " "
+  echo "    2. ./comm_portal.bash -c [authentication_certificate.pem] -d"
+  echo "           connects to portal and gets session cookie"
+  echo "           then demonstrates connectivity by accessing private content"
+  echo "    3. ./comm_portal.bash -g"
+  echo "           uses session_cookie or user credentials to get data"
+  echo "           for items specified in file var2get"
+  echo " "
+  echo " "
+  exit
+fi
+
+# Define functions
+# Check if http 200 OK has been found in returned text
+function check200 {
+  if grep -q "HTTP/1.1 200 OK" $1; then
+    return 0
+  else
+    return 1
+  fi
+}
+
+##################################
+## start session and get cookie ##
+##################################
+url=$host$auth_path
+if [ $doit == 1 ]; then
+  curl -X POST -vs -k $url --cert-type PEM --cert $cert 2>&1 | more > handshake_output.text
+
+  ## check if curl returned with 200 OK
+  if check200 handshake_output.text == 1; then
+    echo "";echo "   Success: connection established with cookie: "
+
+    ## get everything between "=session=" and "; Domain"
+    grep -o -P '(?<=session=).*(?=; Domain)' handshake_output.text > session_cookie
+    more session_cookie; echo ""
+
+  else
+    echo "Connection not established. Output follows"
+    echo "Command used curl -X POST -vs -k $url --cert-type PEM --cert $cert 2>&1"
+    echo "Press any key"
+    read A
+    more handshake_output.text
+    exit
+  fi
+  rm -rf handshake_output.text
+  session_cookie=`more session_cookie`
+
+# dry run
+else
+  echo "Get cookies"
+  echo "==========="
+  echo "curl -X POST -vs -k $url --cert-type PEM --cert $cert 2>&1 | more > handshake_output.text"
+  echo " "
+fi
+session_cookie=`more session_cookie` # in case doit = 0 (i.e. --kidding)
+
+#################################
+## test authentication success ##
+#################################
+# check access if authenticated
+if [ $demo == 1 ]; then
+  if [ -z "$demo_path" ]; then
+    demo_path=$default_demo_path
+  fi
+  url=$host$demo_path
+  curl -vs -k $url --cookie "session=$session_cookie" 2>&1 | more > output.json
+  if check200 output.json == 1; then
+    echo "";echo "   Success: connection demonstrated OK";echo ""
+  else
+    echo "";echo "   Error: connection demonstration not OK";echo ""
+  fi
+  rm -rf output.json
+  exit
+fi
+
+##############
+## get data ##
+##############
+dos2unix -q var2get
+while read p; do
+  # explode contents of input var2get file
+#  IFS=',' read -r -a input <<< "$p"
+  inputstr="$(echo "$p" | sed -e 's/,/ /g')"
+  input=($inputstr)
+  start_time=${input[1]}
+  end_time=${input[2]}
+  # start_time="2019-03-06T00:00:00"
+  # end_time="2019-03-12T00:00:00"
+
+  # make file name
+  filename="${input[0]}_from_${start_time}_to_${end_time}.json"
+
+  # if only for previous day then set times for whole day but
+  # give special file name
+  if [ $prev_day == 1 ]; then
+    tmp=`date --rfc-3339=date -d "yesterday"`
+    start_time="${tmp}T00:00:00"
+    end_time="${tmp}T23:59:59"
+    filename="${input[0]}_${tmp}_clm.json"
+  fi
+
+  # get stats
+  if [ $stats == 1 ]; then
+    curl -s "$host$timeseries/${input[0]}/stats" --cookie "session=$session_cookie" > response.json
+    jq '.end_time'          response.json > 1
+    jq '.start_time'        response.json > 2
+    jq '.count'             response.json > 3
+    # jq '.update_ts'         response.json > 5
+    paste -d, 1 2 3 > 4          # create csv file to display
+    echo ${input[0]}
+    echo "Data available from            to                         no. of values"
+    column -s, -t < 4 | more     # pretty print csv
+    rm -fr 1 2 3 4 response.json
+    echo ""
+  fi
+
+  # get data
+  if [ $doit == 1 ]; then
+    if [ $data == 1 ]; then
+
+      # using credentials  (does not work anymore since updating to certificate)
+      #curl -u $credentials "$host$timeseries/${input[0]}?start_time=${start_time}&end_time=${end_time}" > $filename
+
+      # using session cookie
+      #echo "curl -v -k ${host}${timeseries}/${input[0]}?start_time=${input[1]}&end_time=${input[2]} --cookie session=${session_cookie}"
+      curl -v -k "$host$timeseries/${input[0]}?start_time=$start_time&end_time=$end_time" --cookie "session=$session_cookie" > $filename
+    fi
+  else
+    #echo "Request data (using username and password)"
+    #echo "=========================================="
+    #echo curl -u $credentials "$host$timeseries/${input[0]}?start_time=$start_time&end_time=$end_time"
+    echo " "
+    echo "Request data (using SSL certificate)"
+    echo "===================================="
+    echo "curl -v -k $host$timeseries/${input[0]}?start_time=${start_time}&end_time=${end_time} --cookie session=${session_cookie}"
+    # echo "curl -v -k ${host}${timeseries}/${input[0]}?start_time=${start_time}&end_time=${end_time} --cookie session=${session_cookie}"
+    echo " "
+  fi
+
+done <var2get
+
+
+# pretty print json by
+# python -m json.tool *.json
+
+
+
+
+
+
+
+
+
+#

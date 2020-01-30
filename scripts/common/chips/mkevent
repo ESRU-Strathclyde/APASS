@@ -1,0 +1,110 @@
+#/bin/bash
+
+# init...
+doit=1;help=0;list=0;create=0;update=0;delete=0
+
+# Process command line options
+if [ $# -ne 0 ]; then
+  for i do
+    case "$i" in
+      -h | --help)    help=1; shift;;
+      -k | --kidding) doit=0; shift;;
+    esac
+  done
+fi
+
+if [ $help == 1 ]; then
+  echo " h2g models manipulation script. Used to generate events"
+  echo " This script displays a list od models that are authorised"
+  echo " to create events. The user selects one after which"
+  echo " the script adds details of the selected model to file "
+  echo " event_details_template.json and creates an event from this file."
+  echo " The template file needs to externally edited to include event"
+  echo " details before invoking this script."
+  exit
+fi
+
+# get cookie checking if last cookie is stale (>1hour old)
+python3 -c "from get_cookie import get_cookie;get_cookie()"
+session_cookie=`more session_cookie`
+
+# read which service_id to use
+A=none;
+while [ $A != "1" ] &&
+      [ $A != "2" ]
+do
+  echo "Select service? Enter 1 or 2"
+  echo "  (1) ESP-r;"
+  echo "  (2) Calibro;"
+  read A
+  #A=1;echo "Choosing ESP-r"; # select ESP_r for now
+done
+case "$A" in
+   1) model=ESP-r;;
+   2) model=Calibro;;
+esac
+if [ $model = "ESP-r" ]; then
+  service_id="6a720b48-d222-11e8-8c8e-525400ae9f4a";
+  str1="MODELS THAT CAN CURRENTLY GENERATE EVENTS (ESP-r)"
+  str2="================================================="
+elif [ $model = "Calibro" ];then
+  service_id="6a83eb2e-d222-11e8-858b-525400ae9f4a";
+  str1="MODELS THAT CAN CURRENTLY GENERATE EVENTS (Calibro)"
+  str2="==================================================="
+fi
+
+# get models already authorised to generate events (same code as in auth_model)
+curl -s "https://h2g-platform-core.nobatek.com/api/v0/outputs/events/?module_id=${service_id}" --cookie "session=${session_cookie}" > response.json
+jq '.[] | .model_id' response.json > 1
+ jq '.[] | .id' response.json > 2 # consider not to list id
+sed -i '1s;^;model_id:\n========\n;' 1        # prepend descriptive string
+sed -i '1s;^;id:\n===\n;' 2
+paste -d, 1 2 > 4          # create csv file to display
+echo $str1;echo $str2
+column -s, -t < 4 | more     # pretty print csv
+rm -rf 1 2 4 response.json
+echo ""
+echo "Enter model_id of model that will generate this event"
+read model_id
+
+A=none;
+echo ""
+while [ $A != "1" ] &&
+      [ $A != "2" ]
+do
+  echo "Select site? Enter 1 or 2"
+  echo "  (1) NUIG North Campus;"
+  echo "  (2) Challenger;"
+  read A
+  #A=1;echo "Choosing ESP-r"; # select ESP_r for now
+done
+case "$A" in
+   1) site_id="21354d90-d21e-11e8-985e-525400ae9f4a";;
+   2) site_id="5044e65c-d220-11e8-814d-525400ae9f4a";;
+esac
+
+sed "s/module_id/${service_id}/" event_input_template.json > event_input.json
+sed "s/model_id/${model_id}/" -i event_input.json
+sed "s/id_of_site/${site_id}/" -i event_input.json
+
+# authorise model to create events
+if [ $doit == 1 ]; then
+  curl -d @event_input.json -H "Content-Type: application/json" -X POST https://h2g-platform-core.nobatek.com/api/v0/events/ --cookie "session=${session_cookie}" -v
+else
+  echo "curl -d @event_input.json -H \"Content-Type: application/json\" -X POST https://h2g-platform-core.nobatek.com/api/v0/events/ --cookie \"session=${session_cookie}\" -v"
+fi
+rm event_input.json
+
+
+
+
+
+
+
+
+
+
+
+
+
+#

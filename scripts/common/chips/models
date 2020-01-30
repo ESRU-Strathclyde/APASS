@@ -1,0 +1,155 @@
+#/bin/bash
+
+# init...
+doit=1;help=0;list=0;create=0;update=0;delete=0
+
+# Process command line options
+if [ $# -ne 0 ]; then
+  for i do
+    case "$i" in
+      -k | --kidding) doit=0; shift;;
+      -h | --help)    help=1; shift;;
+      -l | --list)    list=1;create=0;update=0;delete=0; shift;;
+      -c | --create)  list=0;create=1;update=0;delete=0; shift;;
+      -u | --update)  list=1;create=0;update=1;delete=0; shift;;
+      -d | --delete)  list=1;create=0;update=0;delete=1; shift;;
+    esac
+  done
+fi
+if [ $help == 1 ]; then
+  echo " h2g models manipulation script. Used to "
+  echo "  1. list, create, update or delete models associated"
+  echo "      with the ESP-r or Calibro module"
+  echo "  2. print commands used to do the above"
+  echo " Data to create/update a model is taken from file"
+  echo " model_input.json"
+  echo " "
+  echo " Command line arguments:"
+  echo " The script can only do one of list/create/update/delete and "
+  echo " if you specify multiple options/switches only the last "
+  echo " operation will be carried out. The only exception is -k "
+  echo " that needs to be used with another option."
+  echo " Switches have to be specified individually and "
+  echo " cannot be concatenated (-c -k is okay but not -ck)"
+  echo " "
+  echo "   -l, --list models"
+  echo " "
+  echo "   -c, --create model from file model_input.json"
+  echo "       note that this file needs to be edited independent of"
+  echo "       this script"
+  echo " "
+  echo "   -u, --update existing model from file espr_model_input.json"
+  echo "       or calibro_model_input.json as relevant. Note that this"
+  echo "       file needs to be edited independent of this script. DO NOT"
+  echo "       delete or change the service_id key in these files."
+  echo " "
+  echo "   -d, --delete existing model (a list is presented)"
+  echo " "
+  echo "   -k, --kidding just print commands"
+  echo " "
+  exit
+fi
+
+# get cookie checking if last cookie is stale (>1hour old)
+python3 -c "from get_cookie import get_cookie;get_cookie()"
+session_cookie=`more session_cookie`
+
+# read which service_id to use
+A=none;
+while [ $A != "1" ] &&
+      [ $A != "2" ]
+do
+  echo "Select service? Enter 1 or 2"
+  echo "  (1) ESP-r;"
+  echo "  (2) Calibro;"
+  read A
+  #A=1 # select ESP_r for now
+done
+case "$A" in
+   1) model=ESP-r;;
+   2) model=Calibro;;
+esac
+if [ $model = "ESP-r" ]; then
+  service_id="6a720b48-d222-11e8-8c8e-525400ae9f4a";
+  input_file="espr_model_input.json"
+elif [ $model = "Calibro" ];then
+  service_id="6a83eb2e-d222-11e8-858b-525400ae9f4a";
+  input_file="calibro_model_input.json"
+fi
+
+# list models
+curl -s -X GET "https://h2g-platform-core.nobatek.com/api/v0/models/?service_id=${service_id}" --cookie "session=${session_cookie}" > response.json
+if [ $list == 1 ];then
+  jq '.[] | .name'        response.json > 1
+  jq '.[] | .id'          response.json > 2
+  jq '.[] | .description' response.json > 3
+#    jq '.[] | select(.service_id=="6a720b48-d222-11e8-8c8e-525400ae9f4a") | .name'        response.json > 1
+#    jq '.[] | select(.service_id=="6a720b48-d222-11e8-8c8e-525400ae9f4a") | .id'          response.json > 2
+#    jq '.[] | select(.service_id=="6a720b48-d222-11e8-8c8e-525400ae9f4a") | .description' response.json > 3
+  printf ",name,id,description\n" > 0;
+  sed -i '1s;^;name:\n=====\n;' 1        # prepend descriptive string
+  sed -i '1s;^;id:\n===\n;' 2
+  sed -i '1s;^;description:\n============\n;' 3
+  paste -d, 1 2 3 > 4          # create csv file to display
+  echo "LIST OF AVAILABLE MODELS"
+  echo "========================"
+  column -s, -t < 4 | more     # pretty print csv
+  rm -fr 0 1 2 3 4
+fi # end list
+
+if [ $delete == 1 ];then
+    echo "Which model to delete (enter id)?";
+    read id
+    rm -fr header_dump
+    curl -X GET https://h2g-platform-core.nobatek.com/api/v0/models/$id --cookie "session=${session_cookie}" --dump-header header_dump > /dev/null 2>&1
+    tag=`grep -Fi etag header_dump | cut -d \" -f2` # remove "etag:" & spaces
+    rm -rf header_dump
+  if [ $doit == 1 ]; then
+    curl -H "If-Match:${tag}" -X DELETE https://h2g-platform-core.nobatek.com/api/v0/models/$id --cookie "session=${session_cookie}" -v
+  else
+    echo " ";
+    echo "curl -H \"If-Match:${tag}\" -X DELETE https://h2g-platform-core.nobatek.com/api/v0/models/$id --cookie \"session=${session_cookie}\" -v"
+  fi
+  exit
+fi # end delete
+
+if [ $update == 1 ];then
+  if [ $doit == 1 ]; then
+    read id
+    rm -fr header_dump
+    curl -X GET https://h2g-platform-core.nobatek.com/api/v0/models/$id --cookie "session=${session_cookie}" --dump-header header_dump > /dev/null 2>&1
+    tag=`grep -Fi etag header_dump | cut -d \" -f2` # remove "etag:" & spaces
+    rm -rf header_dump
+    curl -d @${input_file} -H "Content-Type: application/json" -H "If-Match:${tag}" -X PUT https://h2g-platform-core.nobatek.com/api/v0/models/$id --cookie "session=${session_cookie}" -v
+  else
+    echo " ";
+    echo "curl -d @${input_file} -H \"Content-Type: application/json\" -H \"If-Match:${tag}\" -X PUT https://h2g-platform-core.nobatek.com/api/v0/models/$id --cookie \"session=${session_cookie}\" -v"
+  fi
+  exit
+fi # end update
+
+if [ $create == 1 ];then
+  if [ $doit == 1 ]; then
+    curl -d @${input_file} -H "Content-Type: application/json" -X POST https://h2g-platform-core.nobatek.com/api/v0/models/ --cookie "session=${session_cookie}" -v
+  else
+    echo " ";
+    echo "curl -d @${input_file} -H \"Content-Type: application/json\" -X POST https://h2g-platform-core.nobatek.com/api/v0/models/ --cookie \"session=${session_cookie}\" -v"
+  fi
+  exit
+fi # end create
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#

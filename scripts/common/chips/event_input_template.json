@@ -1,0 +1,16 @@
+{
+  "application": "module_id",
+  "model": "model_id",
+  "execution_timestamp": "2019-03-12T09:53:55Z",
+  "site_id": "id_of_site",
+  "building_id": "string",
+  "floor_id": "string",
+  "space_id": "string",
+  "sensor_ids": [],
+  "level": "INFO",
+  "category": "comfort",
+  "start_time": "2019-03-12T09:53:55Z",
+  "end_time": "2019-03-12T09:53:55Z",
+  "reliability": 1,
+  "description": "testing event creation for ESP-r"
+}
