@@ -3125,8 +3125,8 @@ if "$do_detailed_report"; then
   echo '\documentclass[a4paper,11pt]{report}' >> "$detailed_report"
   echo >> "$detailed_report"
   echo '\usepackage[tmargin=2cm,bmargin=2cm,lmargin=2cm,rmargin=2cm]{geometry}' >> "$detailed_report"
-  echo '\usepackage{fontspec}' >> "$report"
-  echo '\setmainfont{TeX Gyre Termes}' >> "$report"
+  echo '\usepackage{fontspec}' >> "$detailed_report"
+  echo '\setmainfont{TeX Gyre Termes}' >> "$detailed_report"
   echo '\usepackage{underscore}' >> "$detailed_report"
   echo '\usepackage{multirow}' >> "$detailed_report"
   echo '\usepackage{scrextend}' >> "$detailed_report"
@@ -4035,9 +4035,9 @@ echo '\end{document}' >> "$report"
 
 # Compile three times to ensure longtable does its thing.
 rm -f "${report:0:-4}.aux"
-lualatex -halt-on-error -output-directory="$tmp_dir" -pdf "$report" > "$tmp_dir/lualatex.out"
-lualatex -halt-on-error -output-directory="$tmp_dir" -pdf "$report" >> "$tmp_dir/lualatex.out"
-lualatex -halt-on-error -output-directory="$tmp_dir" -pdf "$report" >> "$tmp_dir/lualatex.out"
+lualatex -halt-on-error -output-directory="$tmp_dir" "$report" > "$tmp_dir/lualatex.out"
+lualatex -halt-on-error -output-directory="$tmp_dir" "$report" >> "$tmp_dir/lualatex.out"
+lualatex -halt-on-error -output-directory="$tmp_dir" "$report" >> "$tmp_dir/lualatex.out"
 mv "${report:0:-4}.pdf" "$report_final"
 
 if "$do_detailed_report"; then
@@ -4047,9 +4047,9 @@ if "$do_detailed_report"; then
   echo '\end{document}' >> "$detailed_report"
 
   rm -f "${detailed_report:0:-4}.aux"
-  lualatex -halt-on-error -output-directory="$tmp_dir" -pdf "$detailed_report" >> "$tmp_dir/lualatex.out"
-  lualatex -halt-on-error -output-directory="$tmp_dir" -pdf "$detailed_report" >> "$tmp_dir/lualatex.out"
-  lualatex -halt-on-error -output-directory="$tmp_dir" -pdf "$detailed_report" >> "$tmp_dir/lualatex.out"
+  lualatex -halt-on-error -output-directory="$tmp_dir" "$detailed_report" >> "$tmp_dir/lualatex.out"
+  lualatex -halt-on-error -output-directory="$tmp_dir" "$detailed_report" >> "$tmp_dir/lualatex.out"
+  lualatex -halt-on-error -output-directory="$tmp_dir" "$detailed_report" >> "$tmp_dir/lualatex.out"
   mv "${detailed_report:0:-4}.pdf" "$detailed_report_final"
 fi
 
