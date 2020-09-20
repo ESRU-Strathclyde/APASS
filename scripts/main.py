@@ -415,7 +415,7 @@ Calibration: '''+s_calStatus+''' \\\\
         s_tmpjson='outputs/data.json'
         ls_simStart=s_simStart.split('/')
         ls_simStop=s_simStop.split('/')
-        s_period='{:s}_{:s}_{:s}_{:s}_{:s}'.format(ls_simStart[0],ls_simStart[1],ls_simStop[0],ls_simStop[1],ls_simStart[2])
+        s_period='{:s}_{:s}_{:s}_{:s}_{:s}'.format(ls_simStart[0].strip('0'),ls_simStart[1].strip('0'),ls_simStop[0].strip('0'),ls_simStop[1].strip('0'),ls_simStart[2])
         ls_args=['-p',s_period,'-d','tmp','-f',s_tmpres,'-r',s_tmppdf,'-R',s_tmpdpdf,'-j',s_tmpjson,'-P','tmp/preamble.txt',s_cfg]
 
     # Set handler so that the PAM will be killed if the job is killed.

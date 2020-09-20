@@ -3326,8 +3326,8 @@ if "$do_detailed_report"; then
   echo '\documentclass[a4paper,11pt]{report}' >> "$detailed_report"
   echo >> "$detailed_report"
   echo '\usepackage[tmargin=2cm,bmargin=2cm,lmargin=2cm,rmargin=2cm]{geometry}' >> "$detailed_report"
-  echo '\usepackage{fontspec}' >> "$report"
-  echo '\setmainfont{TeX Gyre Termes}' >> "$report"
+  echo '\usepackage{fontspec}' >> "$detailed_report"
+  echo '\setmainfont{TeX Gyre Termes}' >> "$detailed_report"
   echo '\usepackage{underscore}' >> "$detailed_report"
   echo '\usepackage{multirow}' >> "$detailed_report"
   echo '\usepackage{scrextend}' >> "$detailed_report"
@@ -3476,7 +3476,7 @@ if [ "$performance_flag" -gt 0 ]; then
     echo '' >> "$detailed_report"
   fi
 
-  rm "$tmp_dir/PTD_table" > /dev/null
+  rm "$tmp_dir/PTD_table" 1>/dev/null 2>&1
 #  s='\n\\end{longtable}\n\n\\begin{longtable}{l l p{2cm} p{2cm} p{2cm} p{2cm} p{2cm} p{2cm}}\n\n\\cline{3-8}\n\\phantom{Area} \& \\phantom{Location} \& \\multicolumn{6}{c}{\\multirow{2}{12cm}{\\centering{Time of worst violation of the criteria associated with the metrics above\\\\(MM-DD HH:MM)}}} \\\\\n \\\\\n\\cline{3-8}\n\\endfirsthead\n\n\\hline\n\\multicolumn{8}{l}{\\small\\sl continued from previous page} \\\\\n\\hline\n\\multirow{3}{*}{Area} \& \\multirow{3}{*}{Location} \& \\multirow{3}{1.9cm}{\\centering{Operative\\\\temperature}} \& \\multirow{3}{1.9cm}{\\centering{Floor\\\\temperature}} \& \\multirow{3}{1.8cm}{\\centering{Radiant\\\\asymmetry\\\\(ceiling)}} \& \\multirow{3}{1.8cm}{\\centering{Radiant\\\\asymmetry\\\\(wall)}} \& \\multirow{3}{1.6cm}{\\centering{Draught}} \& \\multirow{3}{1.9cm}{\\centering{Vertical air\\\\temperature\\\\difference}} \\\\\n \\\\\n \\\\\n\\hline\n\\phantom{Area} \& \\phantom{Location} \& \\multicolumn{6}{c}{\\multirow{2}{12cm}{\\centering{Time of worst violation of the criteria associated with the metrics above\\\\(MM-DD HH:MM)}}} \\\\\n \\\\\n\\cline{3-8}\n\\endhead\n\n\\hline\n\\multicolumn{8}{r}{\\small\\sl continued on next page} \\\\\n\\hline\n\\endfoot\n\n\\hline\n\\endlastfoot\n\n'
 
 # Rank order table entries.
