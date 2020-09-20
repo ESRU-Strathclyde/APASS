@@ -472,7 +472,7 @@ Calibration: '''+s_calStatus+''' \\\\
     if b_debug:
         f_log.write('\nPerformance assessment finished, output follows:\n'+t_tmp[0].decode()+'\n')
     if proc.returncode!=0:
-        jobError(s_jobID,'performance assessment failed, error output follows:\n'+t_tmp[1].decode()+'\n',proc.returncode,b_debug,f_log,s_shareDir)
+        jobError(s_jobID,'Performance assessment failed.\n\nstderr:\n'+t_tmp[1].decode()+'\n\nstdout:\n'+t_tmp[0].decode()+'\n\n',proc.returncode,b_debug,f_log,s_shareDir)
 
     # Get performance flag.
     if not b_dummy:
@@ -487,8 +487,8 @@ Calibration: '''+s_calStatus+''' \\\\
             jobError(s_jobID,'Unrecognised compliance flag "'+s_pFlag+'"\n',18,b_debug,f_log,s_shareDir)
 
         # Write model and output URLs to JSON.
-        run(['sed','-e','s/"report": "",/"report": "https:\/\/mae-esru.mecheng.strath.ac.uk\/liveservices\/h2g\/Results\/'+s_jobID+'\/report.pdf",/','-i',s_tmpjson])
-        run(['sed','-e','s/"results libraries": ""/"results libraries": "https:\/\/mae-esru.mecheng.strath.ac.uk\/liveservices\/h2g\/Results\/'+s_jobID+'\/res.tar.gz"/','-i',s_tmpjson])
+        run(['sed','-e','s/"report": "",/"report": "https:\/\/mae-esru.mecheng.strath.ac.uk\/liveservices\/APASS\/Results\/'+s_jobID+'\/report.pdf",/','-i',s_tmpjson])
+        run(['sed','-e','s/"results libraries": ""/"results libraries": "https:\/\/mae-esru.mecheng.strath.ac.uk\/liveservices\/APASS\/Results\/'+s_jobID+'\/res.tar.gz"/','-i',s_tmpjson])
 
     # Upload job results.
     # Send uploading signal.
@@ -554,18 +554,19 @@ Calibration: '''+s_calStatus+''' \\\\
 
 
 ### FUNCTION: jobError
-# Writes an error file for a simulation job and exits with a fail code. If
-# debugging is active, also writes the message to the log file. Adds a datetime
-# stamp to all messages.
+# Writes an error file for a simulation job and exits with a fail code.
+# If debugging, closes the log file. 
+# Adds a datetime stamp to all messages.
 # Writes error to json and pdf as well (currently not active).
 
 def jobError(s_jobID,s_message,i_errorCode,b_debug,f_log,s_shareDir):
     curDateTime=datetime.now()
     s_dateTime=curDateTime.strftime('%a %b %d %X %Y')
     f=open(s_jobID+'.err','w')
-    f.write(s_message+' @ '+s_dateTime)
+    f.write('Error @ '+s_dateTime+'\n\n')
+    f.write(s_message)
     f.close()
-    if b_debug: f_log.write('Error: '+s_message+' @ '+s_dateTime)
+    if b_debug: f_log.write('Error @ '+s_dateTime+'\n')
 
     # Error reports are no longer provided in the front end interface.
     # This functionality is commented for the time being.
@@ -608,7 +609,7 @@ def jobError(s_jobID,s_message,i_errorCode,b_debug,f_log,s_shareDir):
 #     if b_debug: f_log.write('Done.\n')    
 
     if b_debug: f_log.close()
-    sys.exit(1)
+    sys.exit(i_errorCode)
 
 ### END FUNCTION
 
@@ -619,12 +620,12 @@ def jobError(s_jobID,s_message,i_errorCode,b_debug,f_log,s_shareDir):
 def sleepTilNext(start_time,r_interval,b_debug):
     end_time=time()
     time_taken=end_time-start_time
-    if b_debug: print("main.py: dispatch took "+'{:.2f}'.format(time_taken)+" seconds")
+    if b_debug: print("APASS: dispatch took "+'{:.2f}'.format(time_taken)+" seconds")
     if time_taken<r_interval:
-        if b_debug: print('main.py: sleeping for '+'{:.2f}'.format(r_interval-time_taken)+' seconds')
+        if b_debug: print('APASS: sleeping for '+'{:.2f}'.format(r_interval-time_taken)+' seconds')
         sleep(r_interval-time_taken)
     else:
-        if b_debug: print("main.py: I'm late! I'm late!")
+        if b_debug: print("APASS: I'm late! I'm late!")
 
 ### END FUNCTION
 
@@ -640,15 +641,15 @@ def getJobDir(s_jobID):
 ### END FUNCTION
 
 
-### FUNCTION: mainError
-# Prints an error message from the main process to the screen and to the error log.
-def mainError(s_msg,s_errlog):    
+### FUNCTION: printError
+# Prints a timestamped error message to the error log, and to the terminal if in debug mode.
+def printError(s_msg,s_errlog,b_debug):    
     curDateTime=datetime.now()
     s_dateTime=curDateTime.strftime('%a %d %b %X %Y')
-    print('main.py warning @ '+s_dateTime+': '+s_msg)
-    f_errlog=open(s_errlog+'_cur.txt','a')
+    f_errlog=open(s_errlog,'a')
     f_errlog.write(s_dateTime+': '+s_msg+'\n')
     f_errlog.close()
+    if b_debug: print('APASS error @ '+s_dateTime+': '+s_msg)
 
 ### END FUNCTION
 
@@ -703,7 +704,7 @@ Command line arguments:
             elif arg=='-d' or arg=='--debug':
                 b_debug=True
             else:
-                print('main.py error: unknown command line option "'+arg+'"')
+                print('APASS error: unknown command line option "'+arg+'"',file=sys.stderr)
                 sys.exit(1)
         else:
             # This is an argument.
@@ -715,17 +716,17 @@ Command line arguments:
                 try:
                     r_interval=float(arg)
                 except ValueError:
-                    print('main.py error: interval argument is not a number')
+                    print('APASS error: interval argument is not a number',file=sys.stderr)
                     sys.exit(1)
     if i_argCount<1 or i_argCount>2:
-        print('main.py error: script accepts 1 or 2 argument(s)')
+        print('APASS error: script accepts 1 or 2 argument(s)',file=sys.stderr)
         sys.exit(1)
 
     # Main program.
 
     curDateTime=datetime.now()
     s_dateTime=curDateTime.strftime('%a %b %d %X %Y')
-    if b_debug: print('main.py: SERVICE START @ '+s_dateTime)
+    if b_debug: print('APASS: SERVICE START @ '+s_dateTime)
 
     # Create dictionaries to hold all running processes and pipe connections.
     # They can be retrieved by job ID (string).
@@ -751,7 +752,7 @@ Command line arguments:
     while True:
         curDateTime=datetime.now()
         s_dateTime=curDateTime.strftime('%a %b %d %X %Y')
-        if b_debug: print('main.py: --------------------\nmain.py: starting dispatch @ '+s_dateTime)
+        if b_debug: print('APASS: --------------------\nAPASS: starting dispatch @ '+s_dateTime)
         # Get current time, to time how long dispatch takes.
         start_time=time()
 
@@ -763,7 +764,7 @@ Command line arguments:
         s_SQLdbs=f_SQL.readline().strip()
         s_errlog=f_SQL.readline().strip()
         f_SQL.close()
-        if b_debug: print('main.py: connecting to SQL database at IP '+s_SQLIP)
+        if b_debug: print('APASS: connecting to SQL database at IP '+s_SQLIP)
 
         # Connect to SQL database.
         try:
@@ -773,7 +774,7 @@ Command line arguments:
                 database=s_SQLdbs,
                 connection_timeout=r_interval)
         except:
-            mainError('failed to connect to SQL database, skipping dispatch',s_errlog)
+            printError('failed to connect to SQL database, skipping dispatch',s_errlog,b_debug)
             sleepTilNext(start_time,r_interval,b_debug)
             continue
         cursor=cnx.cursor(buffered=True)
@@ -785,20 +786,20 @@ Command line arguments:
                 cursor.execute("UPDATE results SET result = {:d} WHERE id = {:d}".format(i_update,i_jobID))
                 cnx.commit()
             except:
-                mainError('failed to update SQL database',s_errlog)
+                printError('failed to update SQL database',s_errlog,b_debug)
             else:
-                if b_debug: print('main.py: successfully updated the SQL database')
+                if b_debug: print('APASS: successfully updated the SQL database')
 
         # Retrieve job list from SQL database.
         try:
             cursor.execute("SELECT id,sim_start,sim_stop,model,pam,result FROM results")
             query=cursor.fetchall()
         except:
-            mainError('failed to query SQL database, skipping dispatch',s_errlog)
+            printError('failed to query SQL database, skipping dispatch',s_errlog,b_debug)
             sleepTilNext(start_time,r_interval,b_debug)
             continue
         else:
-            if b_debug: print('main.py: successfully queried the SQL database')
+            if b_debug: print('APASS: successfully queried the SQL database')
 
         # Check for required actions on jobs
         for (i_jobID,s_simStart,s_simStop,i_model,i_PAM,i_progress) in query:
@@ -809,7 +810,7 @@ Command line arguments:
                 model_query=cursor.fetchall()
             except:
                 i_update=9
-                print('main.py: !!! failed to retrieve model details !!!')
+                printError('failed to retrieve model details for job ID {:d}'.format(i_model),s_errlog,b_debug)
                 sql_update(i_update,i_jobID)
                 continue
             else:
@@ -821,7 +822,7 @@ Command line arguments:
                 model_query=cursor.fetchall()
             except:
                 i_update=9
-                print('main.py: !!! failed to retrieve estate name !!!')
+                printError('failed to retrieve name of estate ID {:d}'.format(i_estate),s_errlog,b_debug)
                 sql_update(i_update,i_jobID)
                 continue
             else:
@@ -838,7 +839,7 @@ Command line arguments:
             except:
                 i_update=9
                 sql_update(i_update,i_jobID)
-                print('main.py: !!! PAM ID {:d} not recognised !!!'.format(i_PAM))
+                printError('PAM ID {:d} not recognised for job ID {:d}'.format(i_PAM,i_model),s_errlog,b_debug)
                 continue
 
             # Check stage of this job.
@@ -846,8 +847,9 @@ Command line arguments:
             i_update=-1
 
             # i_update values:
-            # 0: pending
-            # 1: run requested
+            # None: pending (not submitted yet)
+            # 0: run requested
+            # 1: running
             # 11 - 19: running with progress indicator
             # 2: job failed
             # 3: job complete, compliant
@@ -859,25 +861,26 @@ Command line arguments:
             # 9: job error
 
             if i_progress==None:
-                print('main.py: !!! NoneType progress ID !!!')
-                print('main.py:   jobID - '+s_jobID)
-                print('main.py:   building - '+s_building)
-                print('main.py:   performance assessment - '+s_PAM)
+                if b_debug:
+                    print('APASS: *** pending job ***')
+                    print('APASS:   jobID - '+s_jobID)
+                    print('APASS:   building - '+s_building)
+                    print('APASS:   performance assessment - '+s_PAM)
 
             elif i_progress==0:
                 # Start a job - python multiprocessing.
                 # Check that a job with this ID doesn't already exist.
                 if s_jobID in dict_proc:
-                    print('main.py: job with ID '+s_jobID+' already exists, this job will not be started')
+                    if b_debug: print('APASS: job with ID '+s_jobID+' already exists')
                     i_update=1
                     sql_update(i_update,i_jobID)
                     continue
 
                 if b_debug:
-                    print('main.py: *** starting new job ***')
-                    print('main.py:   jobID - '+s_jobID)
-                    print('main.py:   building - '+s_building)
-                    print('main.py:   performance assessment - '+s_PAM)
+                    print('APASS: *** starting new job ***')
+                    print('APASS:   jobID - '+s_jobID)
+                    print('APASS:   building - '+s_building)
+                    print('APASS:   performance assessment - '+s_PAM)
 
                 # Open a unidirectional pipe (slave->master) so the process can communicate its status.
                 con,sender=Pipe(False)
@@ -893,24 +896,24 @@ Command line arguments:
                 # Check status of currently running job - python multiprocessing.
 
                 if b_debug:
-                    print('main.py: ### checking status of job ###')
-                    print('main.py:   jobID - '+s_jobID)
-                    print('main.py:   building - '+s_building)
-                    print('main.py:   performance assessment - '+s_PAM)
+                    print('APASS: ### checking status of job ###')
+                    print('APASS:   jobID - '+s_jobID)
+                    print('APASS:   building - '+s_building)
+                    print('APASS:   performance assessment - '+s_PAM)
                 # Retrieve job and connection objects from dictionaries.
                 if not s_jobID in dict_proc or not s_jobID in dict_pipe:
                     # Job says it is running, but it not registered.
                     # This probably means the service crashed and has been restarted.
                     # Restart the job ... unless there is a kill file in the job directory.
-                    if b_debug: print('main.py:   jobID not registered')
+                    if b_debug: print('APASS:   jobID not registered')
 
                     if isfile(getJobDir(s_jobID)+'/kill.it'):
-                        print('main.py: !!! kill file detected !!!')
-                        i_update=9
+                        if b_debug: print('APASS: !!! kill file detected !!!')
+                        i_update=8
                         sql_update(i_update,i_jobID)
                         continue                        
 
-                    if b_debug: print('main.py: *** restarting job ***')
+                    if b_debug: print('APASS: *** restarting job ***')
 
                     if s_jobID in dict_proc: del dict_proc[s_jobID]
                     if s_jobID in dict_pipe: del dict_pipe[s_jobID]
@@ -924,9 +927,9 @@ Command line arguments:
 
             # Check for an admin kill command (a file called "kill.it" in the job directory).
                 if isfile(getJobDir(s_jobID)+'/kill.it'):
-                    print('main.py: !!! kill file detected !!!')
+                    if b_debug: print('APASS: !!! kill file detected !!!')
                     killItWithFire(s_jobID)
-                    i_update=9
+                    i_update=8
                     sql_update(i_update,i_jobID)
                     continue
 
@@ -936,14 +939,14 @@ Command line arguments:
                     # Job is still alive, check its status.
                     i_tmp=-1
                     b_done=False
-                    if b_debug: print('main.py:   job is alive')
+                    if b_debug: print('APASS:   job is alive')
                     while con.poll():
                         i_tmp=con.recv()
                         if not type(i_tmp)==int:
                             # Unexpected signal type.
                             i_tmp=None
                             break
-                        if b_debug: print('main.py:   job gave signal "'+str(i_tmp)+'"')
+                        if b_debug: print('APASS:   job gave signal "'+str(i_tmp)+'"')
                         if i_tmp==0:
                             b_done=True
                     if b_done:                        
@@ -955,7 +958,7 @@ Command line arguments:
                             # Kill the job just to be safe.
                             # TODO - maybe check outputs?
                             killItWithFire(s_jobID)
-                            if b_debug: print('main.py: !!! job looked dodgy !!!')
+                            printError('job ID {:d} continued to run after exit signal; killed'.format(i_model),s_errlog,b_debug)
                             i_update=9
                         elif proc.exitcode==0:
                             if i_tmp==0:
@@ -964,7 +967,7 @@ Command line arguments:
                                     i_tmp=con.recv()
                                 else:
                                     # This shouldn't be possible.
-                                    if b_debug: print('main.py: !!! job didn\'t give performance flag !!!')
+                                    printError('job ID {:d} didn\'t give performance flag'.format(i_model),s_errlog,b_debug)
                                     i_update=9
                             if i_tmp==0: 
                                 i_update=3 # compliant
@@ -977,7 +980,7 @@ Command line arguments:
                             else:
                                 # Unexpected performance flag.
                                 # Again, this shouldn't really be possible.
-                                if b_debug: print('main.py: !!! job gave unrecognised performance flag !!!')
+                                printError('job ID {:d} gave unrecognised performance flag'.format(i_model),s_errlog,b_debug)
                                 i_update=9
                         else:
                             i_update=2
@@ -995,14 +998,14 @@ Command line arguments:
                     else:
                         # Unexpected signal from job - kill it with fire!
                         killItWithFire(s_jobID)
-                        if b_debug: print('main.py: !!! job looked dodgy !!!')
+                        printError('job ID {:d} gave unexpected signal; killed'.format(i_model),s_errlog,b_debug)
                         i_update=9
                 else:
                     # Job is dead, check exit code and make sure it gave the expected exit signal.
                     sender.close()
                     i_tmp=-1
                     b_done=False
-                    if b_debug: print('main.py:   job is dead')
+                    if b_debug: print('APASS:   job is dead')
                     while con.poll():
                         try: 
                             i_tmp_prev=i_tmp
@@ -1011,7 +1014,7 @@ Command line arguments:
                             # Trap this error to avoid crashing the service.
                             i_tmp=i_tmp_prev
                             break
-                        if b_debug: print('main.py:   job gave signal "'+str(i_tmp)+'"')
+                        if b_debug: print('APASS:   job gave signal "'+str(i_tmp)+'"')
                         if i_tmp==0:
                             b_done=True
                     con.close()
@@ -1027,40 +1030,40 @@ Command line arguments:
                         else:
                             # Unexpected performance flag.
                             # This shouldn't really be possible.
-                            if b_debug: print('main.py: !!! job gave unrecognised performance flag !!!')
+                            printError('job ID {:d} gave unrecognised performance flag'.format(i_model),s_errlog,b_debug)
                             i_update=9
                     elif proc.exitcode!=0:
                         i_update=2
                     else:
-                        if b_debug: print('main.py: !!! job didn\'t give exit signal !!!')
+                        printError('job ID {:d} didn\'t give exit signal'.format(i_model),s_errlog,b_debug)
                         i_update=9
                     # Remove dictionary entries.
                     del dict_proc[s_jobID]
                     del dict_pipe[s_jobID]
 
                 if i_update==3 or i_update==4 or i_update==5 or i_update==6:
-                    if b_debug: print('main.py: *** job complete ***')
+                    if b_debug: print('APASS: *** job complete ***')
 
                 elif i_update==1:
-                    if b_debug: print('main.py: *** job requested ***')
+                    if b_debug: print('APASS: *** job requested ***')
 
                 elif i_update>10 and i_update<20:
-                    if b_debug: print('main.py: *** job still running ***')
+                    if b_debug: print('APASS: *** job still running ***')
 
                 elif i_update==2:
-                    if b_debug: print('main.py: !!! job failed !!!')
+                    if b_debug: print('APASS: !!! job failed !!!')
 
             elif i_progress==7:
                 # Cancel a job.
                 if b_debug:
-                    print('main.py: ### cancelling job ###')
-                    print('main.py:   jobID - '+s_jobID)
-                    print('main.py:   building - '+s_building)
-                    print('main.py:   performance assessment - '+s_PAM)
+                    print('APASS: ### cancelling job ###')
+                    print('APASS:   jobID - '+s_jobID)
+                    print('APASS:   building - '+s_building)
+                    print('APASS:   performance assessment - '+s_PAM)
                 # Retrieve job and connection objects from dictionaries.
                 if not s_jobID in dict_proc or not s_jobID in dict_pipe:
-                    if b_debug: print('main.py:   jobID not registered')
-                    if b_debug: print('main.py: *** non-existent job flagged as cancelled ***')
+                    if b_debug: print('APASS:   jobID not registered')
+                    if b_debug: print('APASS: *** non-existent job flagged as cancelled ***')
                     i_update=8
                     sql_update(i_update,i_jobID)
                     continue
@@ -1068,7 +1071,7 @@ Command line arguments:
                 con,sender=dict_pipe[s_jobID]
                 if proc.is_alive():
                     # Job is still alive, terminate it.
-                    if b_debug: print('main.py:   job is alive')
+                    if b_debug: print('APASS:   job is alive')
                     proc.terminate()
                     slept=0
                     b_zombie=False
@@ -1076,7 +1079,7 @@ Command line arguments:
                         sleep(0.1)
                         slept+=1
                         if slept>50:
-                            mainError('process BPAsim'+s_jobID+' left zombified',s_errlog)
+                            printError('process APASS'+s_jobID+' left zombified',s_errlog,b_debug)
                             b_zombie=True
                             break
                     if not b_zombie: proc.join()
@@ -1085,13 +1088,13 @@ Command line arguments:
                     del dict_proc[s_jobID]
                     del dict_pipe[s_jobID]
                     i_update=8
-                    if b_debug: print('main.py: *** job cancelled ***')
+                    if b_debug: print('APASS: *** job cancelled ***')
                 else:
                     # Job is dead, check exit code and make sure it gave the expected exit signal.
                     sender.close()
                     i_tmp=0
                     b_done=False
-                    if b_debug: print('main.py:   job is dead')
+                    if b_debug: print('APASS:   job is dead')
                     while con.poll():
                         try: 
                             i_tmp_prev=i_tmp
@@ -1100,7 +1103,7 @@ Command line arguments:
                             # Trap this error to avoid crashing the service.
                             i_tmp=i_tmp_prev
                             break
-                        if b_debug: print('main.py:   job gave signal "'+str(i_tmp)+'"')
+                        if b_debug: print('APASS:   job gave signal "'+str(i_tmp)+'"')
                         if i_tmp==4:
                             b_done=True
                     con.close()
@@ -1116,22 +1119,22 @@ Command line arguments:
                         else:
                             # Unexpected performance flag.
                             # This shouldn't really be possible.
-                            if b_debug: print('main.py: !!! job gave unrecognised performance flag !!!')
+                            if b_debug: print('APASS: !!! job gave unrecognised performance flag !!!')
                             i_update=9
                     elif proc.exitcode!=0:
                         i_update=2
                     else:
-                        if b_debug: print('main.py: !!! job didn\'t give exit signal !!!')
+                        if b_debug: print('APASS: !!! job didn\'t give exit signal !!!')
                         i_update=9
                     # Remove dictionary entries.
                     del dict_proc[s_jobID]
                     del dict_pipe[s_jobID]
 
                     if i_update==3 or i_update==4 or i_update==5 or i_update==6:
-                        if b_debug: print('main.py: *** job complete ***')
+                        if b_debug: print('APASS: *** job complete ***')
 
                     elif i_update==2:
-                        if b_debug: print('main.py: !!! job failed !!!')
+                        printError('job ID {:d} failed'.format(i_model),s_errlog,b_debug)
             
             # Update sql database with new job status.
             if i_update>0:
