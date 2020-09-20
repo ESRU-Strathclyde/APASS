@@ -59,9 +59,9 @@ def runJob(s_jobID,s_tarball,s_MD5,s_building,s_estate,s_simStart,s_simStop,s_PA
     # Create temporary directory.
     makedirs('tmp')
 
+    curDateTime=datetime.now()
     if b_debug:
         f_log=open(s_jobID+'.log','w')
-        curDateTime=datetime.now()
         s_dateTime=curDateTime.strftime('%a %b %d %X %Y')
         f_log.write('*** JOB STARTED @ '+s_dateTime+' ***\nJobID: '+s_jobID+'\n')
     else:

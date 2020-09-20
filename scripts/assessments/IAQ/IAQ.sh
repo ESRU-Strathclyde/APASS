@@ -1509,9 +1509,9 @@ echo '\end{document}' >> "$report"
 
 # Compile three times to ensure longtable does its thing.
 rm -f "${report:0:-4}.aux"
-lualatex -halt-on-error -output-directory="$tmp_dir" -pdf "$report" > "$tmp_dir/lualatex.out"
-lualatex -halt-on-error -output-directory="$tmp_dir" -pdf "$report" >> "$tmp_dir/lualatex.out"
-lualatex -halt-on-error -output-directory="$tmp_dir" -pdf "$report" >> "$tmp_dir/lualatex.out"
+lualatex -halt-on-error -output-directory="$tmp_dir" "$report" > "$tmp_dir/lualatex.out"
+lualatex -halt-on-error -output-directory="$tmp_dir" "$report" >> "$tmp_dir/lualatex.out"
+lualatex -halt-on-error -output-directory="$tmp_dir" "$report" >> "$tmp_dir/lualatex.out"
 mv "${report:0:-4}.pdf" "$report_final"
 
 if "$do_detailed_report"; then
@@ -1521,9 +1521,9 @@ if "$do_detailed_report"; then
   echo '\end{document}' >> "$detailed_report"
 
   rm -f "${detailed_report:0:-4}.aux"
-  lualatex -halt-on-error -output-directory="$tmp_dir" -pdf "$detailed_report" >> "$tmp_dir/lualatex.out"
-  lualatex -halt-on-error -output-directory="$tmp_dir" -pdf "$detailed_report" >> "$tmp_dir/lualatex.out"
-  lualatex -halt-on-error -output-directory="$tmp_dir" -pdf "$detailed_report" >> "$tmp_dir/lualatex.out"
+  lualatex -halt-on-error -output-directory="$tmp_dir" "$detailed_report" >> "$tmp_dir/lualatex.out"
+  lualatex -halt-on-error -output-directory="$tmp_dir" "$detailed_report" >> "$tmp_dir/lualatex.out"
+  lualatex -halt-on-error -output-directory="$tmp_dir" "$detailed_report" >> "$tmp_dir/lualatex.out"
   mv "${detailed_report:0:-4}.pdf" "$detailed_report_final"
 fi
 
