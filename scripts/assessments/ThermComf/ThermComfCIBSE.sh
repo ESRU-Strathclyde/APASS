@@ -30,8 +30,8 @@ do_simulation=true
 do_detailed_report=false
 # CFD_start_hour='1.0'
 # CFD_finish_hour='24.99'
-CFD_start_hour='6.0'
-CFD_finish_hour='20.99'
+CFD_start_hour='11.0'
+CFD_finish_hour='11.1'
 
 # Get paths to call the various other scripts used by this program.
 script_dir="$(dirname "$(readlink -f "$0")")"
@@ -1904,8 +1904,23 @@ ${ii}"
 -
 c
 d
-*
--"
+<"
+      num_sensors=0
+      for i1 in "${array_zones_with_CFDandMRT[@]}"; do
+        i0=$((i1-1))
+        num_sensors=$((num_sensors+array_MRT_sensors[i0]))
+      done
+      res_script="$res_script
+${num_sensors}"
+      for i1z in "${array_zones_with_CFDandMRT[@]}"; do
+        for i0s in "${array_sensor_indices[@]}"; do
+          if [ "${array_sensor_zones[i0s]}" -eq "$i1z" ]; then
+            i1s=$((i0s+1))
+            res_script="$res_script
+${i1s}"
+          fi
+        done
+      done
     fi
   else
     res_script="$res_script
@@ -2067,8 +2082,23 @@ ${ii}"
 -
 c
 h
-*
--"
+<"
+      num_sensors=0
+      for i1 in "${array_zones_with_CFDandMRT[@]}"; do
+        i0=$((i1-1))
+        num_sensors=$((num_sensors+array_MRT_sensors[i0]))
+      done
+      res_script="$res_script
+${num_sensors}"
+      for i1z in "${array_zones_with_CFDandMRT[@]}"; do
+        for i0s in "${array_sensor_indices[@]}"; do
+          if [ "${array_sensor_zones[i0s]}" -eq "$i1z" ]; then
+            i1s=$((i0s+1))
+            res_script="$res_script
+${i1s}"
+          fi
+        done
+      done
     fi
   else
     res_script="$res_script
@@ -2130,7 +2160,6 @@ a"
       # Get air temperature and air velocity from CFD results.
       res_script="$res_script
 o
-${array_zone_CFDdomain_numbers[i0_zone]}
 >
 b
 $tmp_dir_tmp/zone${i1_zone}_sensor${i1_sensor}_cfdtimeseries.txt
@@ -2730,11 +2759,15 @@ for is0 in "${array_sensor_indices[@]}"; do
     if [ "${array_severity_wall[is0]}" -gt 0 ]; then is_wall_discomfort=true; fi
   fi
   if "$is_CFD"; then
-    if ! "$is_vertdT_discomfort"; then
-      if [ "${array_severity_vertdT[is0]}" -gt 0 ]; then is_vertdT_discomfort=true; fi
-    fi
-    if ! "$is_draught_discomfort"; then
-      if [ "${array_severity_draught[is0]}" -gt 0 ]; then is_draught_discomfort=true; fi
+    iz1="${array_sensor_zones[is0]}"
+    iz0="$((iz1-1))"
+    if [ "${array_CFD_domains[iz0]}" -gt 0 ]; then
+      if ! "$is_vertdT_discomfort"; then
+        if [ "${array_severity_vertdT[is0]}" -gt 0 ]; then is_vertdT_discomfort=true; fi
+      fi
+      if ! "$is_draught_discomfort"; then
+        if [ "${array_severity_draught[is0]}" -gt 0 ]; then is_draught_discomfort=true; fi
+      fi
     fi
   fi
   if [ "$simPeriod_days" -gt 1 ]; then
@@ -3211,33 +3244,35 @@ if [ "$performance_flag" -gt 0 ]; then
         printf "      }" >> "$JSON"
       fi
       if $is_CFDandMRT; then
-        if [ "${array_severity_draught[i0_sensor]}" -gt 0 ]; then
-          if $first; then
-            first=false
-          else
-            echo "," >> "$JSON"
+        if [ "${array_CFD_domains[i0_zone]}" -gt 0 ]; then
+          if [ "${array_severity_draught[i0_sensor]}" -gt 0 ]; then
+            if $first; then
+              first=false
+            else
+              echo "," >> "$JSON"
+            fi
+            echo "      \"draught\": {" >> "$JSON"
+            echo "        \"frequency of occurrence (%)\": \"${array_PTD_draught[i0_sensor]}\"," >> "$JSON"
+            x="$(awk -v zoneName=$zone_name -v sensorName=$sensor_name -f "$script_dir/get_sensorStats.awk" "$tmp_dir/draught_summary")"
+            a=($x)
+            s="${a[0]}/${a[1]}/$year @ ${a[2]}"
+            echo "        \"worst time\": \"$s\"" >> "$JSON"
+            printf "      }" >> "$JSON"
           fi
-          echo "      \"draught\": {" >> "$JSON"
-          echo "        \"frequency of occurrence (%)\": \"${array_PTD_draught[i0_sensor]}\"," >> "$JSON"
-          x="$(awk -v zoneName=$zone_name -v sensorName=$sensor_name -f "$script_dir/get_sensorStats.awk" "$tmp_dir/draught_summary")"
-          a=($x)
-          s="${a[0]}/${a[1]}/$year @ ${a[2]}"
-          echo "        \"worst time\": \"$s\"" >> "$JSON"
-          printf "      }" >> "$JSON"
-        fi
-        if [ "${array_severity_vertdT[i0_sensor]}" -gt 0 ]; then
-          if $first; then
-            first=false
-          else
-            echo "," >> "$JSON"
+          if [ "${array_severity_vertdT[i0_sensor]}" -gt 0 ]; then
+            if $first; then
+              first=false
+            else
+              echo "," >> "$JSON"
+            fi
+            echo "      \"vertical air temperature difference\": {" >> "$JSON"
+            echo "        \"frequency of occurrence (%)\": \"${array_PTD_vertdT[i0_sensor]}\"," >> "$JSON"
+            x="$(awk -v zoneName=$zone_name -v sensorName=$sensor_name -f "$script_dir/get_sensorStats.awk" "$tmp_dir/vertdT_summary")"
+            a=($x)
+            s="${a[0]}/${a[1]}/$year @ ${a[2]}"
+            echo "        \"worst time\": \"$s\"" >> "$JSON"
+            printf "      }" >> "$JSON"
           fi
-          echo "      \"vertical air temperature difference\": {" >> "$JSON"
-          echo "        \"frequency of occurrence (%)\": \"${array_PTD_vertdT[i0_sensor]}\"," >> "$JSON"
-          x="$(awk -v zoneName=$zone_name -v sensorName=$sensor_name -f "$script_dir/get_sensorStats.awk" "$tmp_dir/vertdT_summary")"
-          a=($x)
-          s="${a[0]}/${a[1]}/$year @ ${a[2]}"
-          echo "        \"worst time\": \"$s\"" >> "$JSON"
-          printf "      }" >> "$JSON"
         fi
       fi
       if [ "$simPeriod_days" -gt 1 ]; then
@@ -3527,15 +3562,19 @@ if [ "$performance_flag" -gt 0 ]; then
         PTD_optWD='n/a'
       fi
       if $is_CFD; then
-        if [ "${array_severity_vertdT[i0_sensor]}" -lt 0 ]; then
-          PTD_vertdT='n/a'
+        if [ "${array_CFD_domains[i0_zone]}" -gt 0 ]; then
+          if [ "${array_severity_vertdT[i0_sensor]}" -lt 0 ]; then
+            PTD_vertdT='n/a'
+          else
+            PTD_vertdT="${array_PTD_vertdT[i0_sensor]}"
+          fi
+          if [ "${array_severity_draught[i0_sensor]}" -lt 0 ]; then
+            PTD_draught='n/a'
+          else
+            PTD_draught="${array_PTD_draught[i0_sensor]}"
+          fi
         else
-          PTD_vertdT="${array_PTD_vertdT[i0_sensor]}"
-        fi
-        if [ "${array_severity_draught[i0_sensor]}" -lt 0 ]; then
           PTD_draught='n/a'
-        else
-          PTD_draught="${array_PTD_draught[i0_sensor]}"
         fi
         if [ "${array_CFD_domains[i0_zone]}" -gt 1 ]; then
           echo "$zone_name & $sensor_name & \\hfil $PTD_opt & \\hfil $PTD_floor & \\hfil $PTD_ceiling & \\hfil $PTD_wall & \\hfil $PTD_draught & \\hfil $PTD_vertdT & \\hfil $PTD_optDD & \\hfil $PTD_optWD "'\\' >> "$tmp_dir/PTD_table"
