@@ -2746,6 +2746,7 @@ is_optDD_discomfort=false
 is_optWD_discomfort=false
 
 iz0=-1
+iCFDs0=-1
 for is0 in "${array_sensor_indices[@]}"; do
 
   # Is there any discomfort for each metric?
@@ -2761,12 +2762,13 @@ for is0 in "${array_sensor_indices[@]}"; do
   if "$is_CFD"; then
     iz1="${array_sensor_zones[is0]}"
     iz0="$((iz1-1))"
-    if [ "${array_CFD_domains[iz0]}" -gt 0 ]; then
+    if [ "${array_CFD_domains[iz0]}" -gt 1 ]; then
+      ((iCFDs0++))
       if ! "$is_vertdT_discomfort"; then
-        if [ "${array_severity_vertdT[is0]}" -gt 0 ]; then is_vertdT_discomfort=true; fi
+        if [ "${array_severity_vertdT[iCFDs0]}" -gt 0 ]; then is_vertdT_discomfort=true; fi
       fi
       if ! "$is_draught_discomfort"; then
-        if [ "${array_severity_draught[is0]}" -gt 0 ]; then is_draught_discomfort=true; fi
+        if [ "${array_severity_draught[iCFDs0]}" -gt 0 ]; then is_draught_discomfort=true; fi
       fi
     fi
   fi
@@ -2791,7 +2793,7 @@ for is0 in "${array_sensor_indices[@]}"; do
 
   sevs="${array_severity_floor[iz0]} ${array_severity_ceiling[is0]} ${array_severity_wall[is0]}"
   if [ "${array_CFD_domains[iz0]}" -eq 2 ]; then
-    sevs="$sevs ${array_severity_vertdT[is0]} ${array_severity_draught[is0]}"
+    sevs="$sevs ${array_severity_vertdT[iCFDs0]} ${array_severity_draught[iCFDs0]}"
   fi
   if [ "$simPeriod_days" -gt 1 ]; then
     sevs="$sevs ${array_severity_optDD[is0]}"
@@ -3067,24 +3069,30 @@ if "$do_detailed_report"; then
 
     # Vertical air temperature difference.
     if "$is_vertdT_discomfort"; then
+      i0_CFDsen=-1
       for i0_sen in "${array_sensor_indices[@]}"; do
-        if [ "${array_severity_vertdT[i0_sen]}" -gt 0 ]; then
-          i1_sen="$((i0_sen+1))"
-          i=1
-          output="$(awk -v zone="$i1_sen" -v recursion="$i" -f "$script_dir/get_singleZoneAllRecursive.awk" $tmp_dir/vertdT_discomfort)"
-          while [ ! "X$output" == "X" ]; do
-            echo "$output" > "$tmp_dir/sen$i0_sen-vertdT-$i"
-            ((i++))    
-            output="$(awk -v zone="$i1_sen" -v recursion="$i" -f "$script_dir/get_singleZoneAllRecursive.awk" $tmp_dir/vertdT_discomfort)"
-          done
-          array_num_vertdT_plotFiles[i0_sen]="$((i-1))"
-        else
-          array_num_vertdT_plotFiles[i0_sen]=0
+        iz0="$((array_sensor_zones[i0_sen]-1))"
+        if [ "${array_CFD_domains[iz0]}" -gt 1 ]; then
+          ((i0_CFDsen++))
+          if [ "${array_severity_vertdT[i0_CFDsen]}" -gt 0 ]; then
+            i1_CFDsen="$((i0_CFDsen+1))"
+            i=1
+            output="$(awk -v zone="$i1_CFDsen" -v recursion="$i" -f "$script_dir/get_singleZoneAllRecursive.awk" $tmp_dir/vertdT_discomfort)"
+            while [ ! "X$output" == "X" ]; do
+              echo "$output" > "$tmp_dir/sen$i0_sen-vertdT-$i"
+              ((i++))    
+              output="$(awk -v zone="$i1_CFDsen" -v recursion="$i" -f "$script_dir/get_singleZoneAllRecursive.awk" $tmp_dir/vertdT_discomfort)"
+            done
+            array_num_vertdT_plotFiles[i0_sen]="$((i-1))"
+          else
+            array_num_vertdT_plotFiles[i0_sen]=0
+          fi
         fi
       done
     fi
 
     # Draught.
+    # TODO update for some CFD zone, like vertdt above
     if "$is_draught_discomfort"; then
       for i0_sen in "${array_sensor_indices[@]}"; do
         if [ "${array_severity_draught[i0_sen]}" -gt 0 ]; then
@@ -3516,6 +3524,7 @@ if [ "$performance_flag" -gt 0 ]; then
 
 # Rank order table entries.
   j=1
+  i0_CFDsen=-1
   for i0_sensor in "${array_sensor_indices[@]}"; do
     i0_zone="$((array_sensor_zones[i0_sensor]-1))"
     zone_name="${array_zone_names[i0_zone]}"
@@ -3562,25 +3571,23 @@ if [ "$performance_flag" -gt 0 ]; then
         PTD_optWD='n/a'
       fi
       if $is_CFD; then
-        if [ "${array_CFD_domains[i0_zone]}" -gt 0 ]; then
-          if [ "${array_severity_vertdT[i0_sensor]}" -lt 0 ]; then
+        if [ "${array_CFD_domains[i0_zone]}" -gt 1 ]; then
+          ((i0_CFDsen++))
+          if [ "${array_severity_vertdT[i0_CFDsen]}" -lt 0 ]; then
             PTD_vertdT='n/a'
           else
-            PTD_vertdT="${array_PTD_vertdT[i0_sensor]}"
+            PTD_vertdT="${array_PTD_vertdT[i0_CFDsen]}"
           fi
-          if [ "${array_severity_draught[i0_sensor]}" -lt 0 ]; then
+          if [ "${array_severity_draught[i0_CFDsen]}" -lt 0 ]; then
             PTD_draught='n/a'
           else
-            PTD_draught="${array_PTD_draught[i0_sensor]}"
+            PTD_draught="${array_PTD_draught[i0_CFDsen]}"
           fi
         else
+          PTD_vertdT='n/a'
           PTD_draught='n/a'
         fi
-        if [ "${array_CFD_domains[i0_zone]}" -gt 1 ]; then
-          echo "$zone_name & $sensor_name & \\hfil $PTD_opt & \\hfil $PTD_floor & \\hfil $PTD_ceiling & \\hfil $PTD_wall & \\hfil $PTD_draught & \\hfil $PTD_vertdT & \\hfil $PTD_optDD & \\hfil $PTD_optWD "'\\' >> "$tmp_dir/PTD_table"
-        else
-          echo "$zone_name & $sensor_name & \\hfil $PTD_opt & \\hfil $PTD_floor & \\hfil $PTD_ceiling & \\hfil $PTD_wall & \\hfil n/a & \\hfil n/a & \\hfil $PTD_optDD & \\hfil $PTD_optWD "'\\' >> "$tmp_dir/PTD_table"
-        fi
+        echo "$zone_name & $sensor_name & \\hfil $PTD_opt & \\hfil $PTD_floor & \\hfil $PTD_ceiling & \\hfil $PTD_wall & \\hfil $PTD_draught & \\hfil $PTD_vertdT & \\hfil $PTD_optDD & \\hfil $PTD_optWD "'\\' >> "$tmp_dir/PTD_table"
       else
         echo "$zone_name & $sensor_name & \\hfil $PTD_opt & \\hfil $PTD_floor & \\hfil $PTD_ceiling & \\hfil $PTD_wall & \\hfil n/a & \\hfil n/a & \\hfil $PTD_optDD & \\hfil $PTD_optWD "'\\' >> "$tmp_dir/PTD_table"
       fi
@@ -3595,6 +3602,7 @@ if [ "$performance_flag" -gt 0 ]; then
   j=1
   i0_zone=-1
   i1_floor=0
+  i0_CFDsen=-1
   for i0_sensor in "${array_sensor_indices[@]}"; do
     i0_zone_prev="$i0_zone"
     i0_zone="$((array_sensor_zones[i0_sensor]-1))"
@@ -3658,14 +3666,15 @@ if [ "$performance_flag" -gt 0 ]; then
       fi
       if $is_CFD; then
         if [ "${array_CFD_domains[i0_zone]}" -gt 1 ]; then
-          if [ "${array_PTD_draught[i0_sensor]}" == "0.0" ] || [ "${array_severity_draught[i0_sensor]}" -lt 0 ]; then
+          ((i0_CFDsen++))
+          if [ "${array_PTD_draught[i0_CFDsen]}" == "0.0" ] || [ "${array_severity_draught[i0_CFDsen]}" -lt 0 ]; then
             draught_worstTime='n/a'
           else
             s="$(awk -v zoneName=$zone_name -v sensorName=$sensor_name -f "$script_dir/get_sensorStats.awk" "$tmp_dir/draught_summary")"
             a=($s)
             draught_worstTime="$(printf "%02d" "${a[1]}")-${a[0]} ${a[2]}"
           fi
-          if [ "${array_PTD_vertdT[i0_sensor]}" == "0.0" ] || [ "${array_severity_vertdT[i0_sensor]}" -lt 0 ]; then
+          if [ "${array_PTD_vertdT[i0_CFDsen]}" == "0.0" ] || [ "${array_severity_vertdT[i0_CFDsen]}" -lt 0 ]; then
             vertdT_worstTime='n/a'
           else
             s="$(awk -v zoneName=$zone_name -v sensorName=$sensor_name -f "$script_dir/get_sensorStats.awk" "$tmp_dir/vertdT_summary")"
