@@ -38,5 +38,12 @@ BEGIN {
 
 END {  
   print(day);
-  for (i in n) {printf("%.2f ",tot[i]/n[i])}
+  for (i in n) {
+    if (n[i]>0) {
+      printf("%.2f ",tot[i]/n[i]);
+    }
+    else {
+      printf("not_occ ");
+    }
+  }
 }
