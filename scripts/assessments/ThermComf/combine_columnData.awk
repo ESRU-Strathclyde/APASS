@@ -13,7 +13,7 @@ BEGIN {
   }
 
   if (active==1) {
-    if (substr($0,1,1)=="#") {
+    if (substr($0,1,1)=="#" || $1=="invl") {
       active=0;
       first_data=0;
       next;

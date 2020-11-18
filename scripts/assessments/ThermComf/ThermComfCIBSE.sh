@@ -1643,10 +1643,6 @@ if [ "$number_zones" -gt 1 ]; then
       zone_ind=$((i+1))
       zi_pad="$(printf "%02d" $zone_ind)"
       res_script="$res_script
->
-b
-$tmp_dir_tmp/wall_discomfort_${zi_pad}
-
 4
 <
 1
@@ -1654,7 +1650,12 @@ ${zone_ind}"
       num_MRT_sensors="${array_MRT_sensors[i]}"
       j=1
       while [ "$j" -le "$num_MRT_sensors" ]; do
+        si_pad="$(printf "%02d" $j)"
         res_script="$res_script
+>
+b
+$tmp_dir_tmp/wall_discomfort_${zi_pad}_${si_pad}
+
 c
 g
 a
@@ -1678,12 +1679,11 @@ g
 e
 <
 1
-${j}"
-        ((j++))
-      done
-      res_script="$res_script
+${j}
 !
 >"
+        ((j++))
+      done
     fi
   done
 else
@@ -1691,7 +1691,12 @@ else
   num_MRT_sensors="${array_MRT_sensors[i]}"
   j=1
   while [ "$j" -le "$num_MRT_sensors" ]; do
+    si_pad="$(printf "%02d" $j)"
     res_script="$res_script
+>
+b
+$tmp_dir_tmp/wall_discomfort_${si_pad}
+
 c
 g
 a
@@ -1715,17 +1720,11 @@ g
 e
 <
 1
-${j}"
-    ((j++))
-  done
-
-  res_script="$res_script
->
-b
-$tmp_dir_tmp/wall_discomfort
-
+${j}
 !
 >"
+    ((j++))
+  done
 fi
 res_script="$res_script
 -
