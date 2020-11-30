@@ -30,8 +30,8 @@ do_simulation=true
 do_detailed_report=false
 # CFD_start_hour='1.0'
 # CFD_finish_hour='24.99'
-CFD_start_hour='11.0'
-CFD_finish_hour='11.1'
+CFD_start_hour='6.0'
+CFD_finish_hour='20.99'
 
 # Get paths to call the various other scripts used by this program.
 script_dir="$(dirname "$(readlink -f "$0")")"
