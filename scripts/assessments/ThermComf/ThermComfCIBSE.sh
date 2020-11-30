@@ -455,9 +455,6 @@ if $do_simulation; then
   rm -f "$building_dir_tmp"/ACC-actions_*.rec > /dev/null
   rm -f "$building_dir_tmp"/cfd3dascii_* > /dev/null
 
-  # Update simulation year in cfg file.
-  sed -i -e 's/\*year *[0-9]*/*year '"$year"'/' "$building_tmp"
-
   if $verbose; then
     echo
     echo " Model: $building"
@@ -477,7 +474,13 @@ if $do_simulation; then
   # Run simulation.
   if ! [ "X$preset" == "X" ]; then
     bps_script=""
-    bps -mode script -file "$building_tmp" -p "$preset" silent > "$tmp_dir_tmp/bps.out"
+    if $is_CFD; then 
+      bps -mode script -file "$building_tmp" -p "$preset" silent > "$tmp_dir_tmp/bps.out" <<~
+
+~
+    else
+      bps -mode script -file "$building_tmp" -p "$preset" silent > "$tmp_dir_tmp/bps.out"
+    fi
 
     mv "$sim_results_preset" "$sim_results_tmp"
     if $is_afn; then
@@ -487,6 +490,9 @@ if $do_simulation; then
       mv "$cfd_results_preset" "$cfd_results_tmp"
     fi
   else
+
+    # Update simulation year in cfg file.
+    sed -i -e 's/\*year *[0-9]*/*year '"$year"'/' "$building_tmp"
     bps_script="
 c
 ${sim_results_tmp}"
