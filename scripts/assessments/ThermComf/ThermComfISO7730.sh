@@ -2681,7 +2681,6 @@ for is0 in "${array_sensor_indices[@]}"; do
         if [ "${array_severity_draught[iCFDs0]}" -gt 0 ]; then is_draught_discomfort=true; fi
       fi
     fi
-    fi
   fi
 
   sev="${array_severity_opt[is0]}"
@@ -3365,9 +3364,9 @@ if [ "$performance_flag" -gt 0 ]; then
           PTD_vertdT='n/a'
           PTD_draught='n/a'
         fi
-        echo "$zone_name & $sensor_name & \\hfil $PTD_opt & \\hfil $PTD_floor & \\hfil $PTD_ceiling & \\hfil $PTD_wall & \\hfil $PTD_draught & \\hfil $PTD_vertdT & \\hfil $PTD_optDD & \\hfil $PTD_optWD "'\\' >> "$tmp_dir/PTD_table"
+        echo "$zone_name & $sensor_name & \\hfil $PTD_opt & \\hfil $PTD_floor & \\hfil $PTD_ceiling & \\hfil $PTD_wall & \\hfil $PTD_draught & \\hfil $PTD_vertdT "'\\' >> "$tmp_dir/PTD_table"
       else
-        echo "$zone_name & $sensor_name & \\hfil $PTD_opt & \\hfil $PTD_floor & \\hfil $PTD_ceiling & \\hfil $PTD_wall & \\hfil n/a & \\hfil n/a & \\hfil $PTD_optDD & \\hfil $PTD_optWD "'\\' >> "$tmp_dir/PTD_table"
+        echo "$zone_name & $sensor_name & \\hfil $PTD_opt & \\hfil $PTD_floor & \\hfil $PTD_ceiling & \\hfil $PTD_wall & \\hfil n/a & \\hfil n/a "'\\' >> "$tmp_dir/PTD_table"
       fi
     fi
     if [ $j -eq $num_sen ]; then
@@ -3435,12 +3434,12 @@ if [ "$performance_flag" -gt 0 ]; then
             a=($s)
             vertdT_worstTime="$(printf "%02d" "${a[1]}")-${a[0]} ${a[2]}"
           fi
-          echo "$zone_name & $sensor_name & \\hfil $opt_worstTime & \\hfil $floor_worstTime & \\hfil $ceiling_worstTime & \\hfil $wall_worstTime & \\hfil $draught_worstTime & \\hfil $vertdT_worstTime & \\hfil $optDD_worstTime & \\hfil $optWD_worstTime "'\\' >> "$tmp_dir/PTD_table"
+          echo "$zone_name & $sensor_name & \\hfil $opt_worstTime & \\hfil $floor_worstTime & \\hfil $ceiling_worstTime & \\hfil $wall_worstTime & \\hfil $draught_worstTime & \\hfil $vertdT_worstTime "'\\' >> "$tmp_dir/PTD_table"
         else
-          echo "$zone_name & $sensor_name & \\hfil $opt_worstTime & \\hfil $floor_worstTime & \\hfil $ceiling_worstTime & \\hfil $wall_worstTime & \\hfil n/a & \\hfil n/a & \\hfil $optDD_worstTime & \\hfil $optWD_worstTime "'\\' >> "$tmp_dir/PTD_table"
+          echo "$zone_name & $sensor_name & \\hfil $opt_worstTime & \\hfil $floor_worstTime & \\hfil $ceiling_worstTime & \\hfil $wall_worstTime & \\hfil n/a & \\hfil n/a "'\\' >> "$tmp_dir/PTD_table"
         fi
       else
-        echo "$zone_name & $sensor_name & \\hfil $opt_worstTime & \\hfil $floor_worstTime & \\hfil $ceiling_worstTime & \\hfil $wall_worstTime & \\hfil n/a & \\hfil n/a & \\hfil $optDD_worstTime & \\hfil $optWD_worstTime "'\\' >> "$tmp_dir/PTD_table"
+        echo "$zone_name & $sensor_name & \\hfil $opt_worstTime & \\hfil $floor_worstTime & \\hfil $ceiling_worstTime & \\hfil $wall_worstTime & \\hfil n/a & \\hfil n/a "'\\' >> "$tmp_dir/PTD_table"
       fi
     fi
     if [ $j -eq $num_sen ]; then
