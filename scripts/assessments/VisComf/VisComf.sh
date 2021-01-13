@@ -15,7 +15,7 @@ results_file="simulation_results"
 start="1 1"
 finish="31 12"
 year="2000"
-timesteps=1
+timesteps=-1
 startup=5
 preset=""
 tmp_dir="./tmp"
@@ -86,7 +86,7 @@ if "$information" ; then
   echo "                          default: 1_1_31_12_2000"
   echo "                       -t timesteps"
   echo "                          number of timesteps per hour"
-  echo "                          default: 1"
+  echo "                          default: read from model"
   echo "                       -s simulation-preset"
   echo "                          name of the simulation preset to be run"
   echo "                          default:"
@@ -160,6 +160,9 @@ check="$(echo "$finish" | awk '{ if ($0 ~ /^[0-9]+ +[0-9]+$/) {print "yes"} }')"
 if [ "$check" != "yes" ]; then
   echo "Error: invalid simulation finish date." >&2
   exit 107
+fi
+if [ "$timesteps" -eq -1 ]; then
+  timesteps="$(awk -v mode="1" -f "$script_dir/get_simPreset_timesteps.awk" "$building")"
 fi
 check="$(echo "$timesteps" | awk '{ if ($0 ~ /^[0-9]+$/) {print "yes"} }')"
 if [ "$check" != "yes" ]; then
