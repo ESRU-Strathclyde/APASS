@@ -472,8 +472,13 @@ if $do_simulation; then
   # Run simulation.
   if ! [ "X$preset" == "X" ]; then
     bps_script=""
-    bps -mode script -file "$building_tmp" -p "$preset" silent > "$tmp_dir_tmp/bps.out"
+    if $is_CFD; then 
+      bps -mode script -file "$building_tmp" -p "$preset" silent > "$tmp_dir_tmp/bps.out" <<~
 
+~
+    else
+      bps -mode script -file "$building_tmp" -p "$preset" silent > "$tmp_dir_tmp/bps.out"
+    fi
     mv "$sim_results_preset" "$sim_results_tmp"
     if $is_afn; then
       mv "$mf_results_preset" "$mf_results_tmp"
@@ -594,7 +599,7 @@ c
 b
 ${tmp_dir_tmp}/occupied_hours
 j
-e
+d
 -
 0.001
 >
@@ -1068,7 +1073,7 @@ if [ "$performance_flag" -gt 0 ]; then
           echo "      \"CO2 concentration\": {" >> "$JSON"
           echo "        \"frequency of occurrence (%)\": \"${array_PTD[i0_result]}\"," >> "$JSON"
           i1_result="$((i0_result+1))"
-          x="$(awk -v entryNum="$i1_result" -f "$script_dir/get_sensorStats.awk" "$tmp_dir/CO2summary.txt")"
+          x="$(awk -v entryNum="$i1_result" -v isCFD=1 -f "$script_dir/get_sensorStats.awk" "$tmp_dir/CO2summary.txt")"
           a=($x)
           s="${a[0]}/${a[1]}/$year @ ${a[2]}"
           echo "        \"worst time\": \"$s\"" >> "$JSON"
@@ -1085,7 +1090,7 @@ if [ "$performance_flag" -gt 0 ]; then
       PTD="${array_PTD[i0_result]}"
       severity="${array_severity[i0_result]}"
       i1_result="$((i0_result+1))"
-      x="$(awk -v entryNum="$i1_result" -f "$script_dir/get_sensorStats.awk" "$tmp_dir/CO2summary.txt")"
+      x="$(awk -v entryNum="$i1_result" -v isCFD=0 -f "$script_dir/get_sensorStats.awk" "$tmp_dir/CO2summary.txt")"
       a=($x)
       worst_time="${a[0]}/${a[1]}/$year @ ${a[2]}"
 #      while [ "$i0_zone_sensor" -lt "${array_MRT_sensors[i0_zone]}" ]; do
@@ -1303,7 +1308,7 @@ if [ "$performance_flag" -gt 0 ]; then
       for sensor_name in "${array_zone_sensor_names[@]}"; do
         if [ "${array_severity[i0_result]}" -gt 0 ]; then
           i1_result="$((i0_result+1))"
-          x="$(awk -v entryNum="$i1_result" -f "$script_dir/get_sensorStats.awk" "$tmp_dir/CO2summary.txt")"
+          x="$(awk -v entryNum="$i1_result" -v isCFD=1 -f "$script_dir/get_sensorStats.awk" "$tmp_dir/CO2summary.txt")"
           a=($x)
           worst_time="${a[1]}/${a[0]} ${a[2]}"
           echo "$zone_name & $sensor_name & \\hfil ${array_PTD[i0_result]} & \\hfil ${worst_time} "'\\' >> "$tmp_dir/PTD_table"
@@ -1317,7 +1322,7 @@ if [ "$performance_flag" -gt 0 ]; then
       PTD="${array_PTD[i0_result]}"
       severity="${array_severity[i0_result]}"
       i1_result="$((i0_result+1))"
-      x="$(awk -v entryNum="$i1_result" -f "$script_dir/get_sensorStats.awk" "$tmp_dir/CO2summary.txt")"
+      x="$(awk -v entryNum="$i1_result" -v isCFD=0 -f "$script_dir/get_sensorStats.awk" "$tmp_dir/CO2summary.txt")"
       a=($x)
       worst_time="${a[1]}/${a[0]} ${a[2]}"
       zone_sensor_names="$(awk -v zoneNum="$i1_zone" -f "$common_dir/esp-query/processOutput_getSpaceSeparatedZoneMRTsensorNames.awk" "$tmp_dir/query_results.txt")"

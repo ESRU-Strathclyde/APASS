@@ -520,7 +520,7 @@ b
 *
 a
 j
-e
+d
 !
 >
 +
@@ -532,7 +532,7 @@ c
 b
 ${tmp_dir_tmp}/occupied_hours
 j
-e
+d
 -
 0.001
 >

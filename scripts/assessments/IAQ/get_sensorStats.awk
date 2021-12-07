@@ -9,6 +9,7 @@ BEGIN {
     mode=1
     nam=sprintf("%s%s",zoneName,sensorName)
   }
+  if (isCFD=="") {exit}
 
   active=0
   cur_max=0.0
@@ -56,15 +57,31 @@ BEGIN {
     }
     else if (mode==2) {
       if (i==entryNum) {
-        max=$5
+        if (isCFD) {
+          max=$3
+        } else {
+          max=$5
+        }
         abs_max=sqrt(max^2)
-        min=$7
+        if (isCFD) {
+          min=$5
+        } else {
+          min=$7
+        }
         abs_min=sqrt(min^2)
         if (abs_max<abs_min) {
-          max_day=$8
+          if (isCFD) {
+            max_day=$6
+          } else {
+            max_day=$8
+          }
         }
         else {
-          max_day=$6
+          if (isCFD) {
+            max_day=$4
+          } else {
+            max_day=$6
+          }
         }    
         if (abs_max>cur_max) {
           cur_max=abs_max

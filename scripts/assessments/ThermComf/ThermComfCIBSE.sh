@@ -168,7 +168,7 @@ fi
 
 
 
-if $verbose; then echo "***** ISO7730 PAM START"; fi
+if $verbose; then echo "***** CIBSE PAM START"; fi
 
 # Test if tmp directory exists.
 if [ ! -d "$tmp_dir" ]; then
@@ -599,7 +599,7 @@ c
 b
 ${tmp_dir_tmp}/occupied_hours
 j
-e
+d
 -
 0.001
 >
@@ -2310,10 +2310,10 @@ x="$(awk -f "$script_dir/combine_summaries.awk" $tmp_dir_tmp/wall_summary_*)"
 echo "$x" > "$tmp_dir_tmp/wall_summary"
 
 # Combine wall discomfort results if needed.
-if [ "$number_zones" -gt 1 ]; then
+# if [ "$number_zones" -gt 1 ]; then
   x="$(awk -f "$script_dir/combine_columnData.awk" $tmp_dir_tmp/wall_discomfort_*)"
   echo "$x" > "$tmp_dir_tmp/wall_discomfort"
-fi
+# fi
 
 if $is_CFDandMRT; then
 
@@ -2964,6 +2964,7 @@ if $is_CFDandMRT; then
     done
   done
   cd $tmp_dir
+  if [ ! -d '../outputs' ]; then mkdir '../outputs'; fi
   tar -czf '../outputs/timeseries.tar.gz' *.csv
   cd ..
 fi
@@ -4459,5 +4460,5 @@ fi
 if "$verbose"; then 
   echo " Done"
   echo
-  echo "***** ISO7730 PAM END"
+  echo "***** CIBSE PAM END"
 fi
