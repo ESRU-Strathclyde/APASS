@@ -10,9 +10,11 @@ BEGIN {
       maxtimes[i]="";
       n++;
     }
-    if ($i>maxs[i]) {
-      maxs[i]=$i;
-      maxtimes[i]=$1;
+    if ($i!="failed" && $i!="not_occ") {
+      if ($i>maxs[i]) {
+        maxs[i]=$i;
+        maxtimes[i]=$1;
+      }
     }
   }
   if (first==1) {

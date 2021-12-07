@@ -23,6 +23,9 @@ BEGIN {
     else if ($i=="inf" || $i=="failed") {
       print "f"
     }
+    else if ($i=="not_occ") {
+      print "-"
+    }
   }
   print "\n"
 }

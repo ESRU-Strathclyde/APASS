@@ -521,7 +521,6 @@ b
 a
 j
 e
--
 !
 >
 +
@@ -683,6 +682,15 @@ simF_JD="$julianDay"
 
 if $do_radiance; then
 
+  # Remove existing files.
+  # rm "$building_dir"/../rad/* 1>/dev/null 2>&1
+  # rm "$building_dir"/../rad/*.rad 1>/dev/null 2>&1
+  # rm "$building_dir"/../rad/*.rif 1>/dev/null 2>&1
+  # rm "$building_dir"/../rad/*.sky 1>/dev/null 2>&1
+  # rm "$building_dir"/../rad/*.hdr 1>/dev/null 2>&1
+  # rm "$building_dir"/../rad/*.glr 1>/dev/null 2>&1
+  # rm "$building_dir"/../rad/*.ugr 1>/dev/null 2>&1
+
   # Automate view generation.
   # Use e2r to set up all the options files, but do the actual rendering
   # manually; this allows us closer control over file names and processing order.
@@ -758,13 +766,13 @@ c
 b"
 
     # Uncomment this to generate very quick, but low quailty views.
-    e2r_script="$e2r_script
-h
-c
-a
->
+#     e2r_script="$e2r_script
+# h
+# c
+# a
+# >
 
--"
+# -"
 
     e2r_script="$e2r_script
 >"
@@ -1016,7 +1024,7 @@ if "$do_detailed_report"; then
         i=1
         output="$(awk -v zone="$i1_result" -v recursion="$i" -f "$script_dir/get_singleZoneAllRecursive.awk" "$tmp_dir/UGR.txt")"
         while [ ! "X$output" == "X" ]; do
-          echo "$output" > "$tmp_dir/res$i1_result-$i"
+          echo "$output" > "$tmp_dir/res$i1_result-$i.txt"
           ((i++))    
           output="$(awk -v zone="$i1_result" -v recursion="$i" -f "$script_dir/get_singleZoneAllRecursive.awk" "$tmp_dir/UGR.txt")"
         done
@@ -1250,7 +1258,7 @@ if [ "$performance_flag" -gt 0 ]; then
     echo '' >> "$detailed_report"
   fi
 
-  rm "$tmp_dir/PTD_table" > /dev/null
+  rm "$tmp_dir/PTD_table" 1>/dev/null 2>&1
 
   # Rank order table entries.
   i0_result=0
@@ -1351,7 +1359,7 @@ if [ "$performance_flag" -gt 0 ]; then
               echo 'x expr=(\thisrowno{0}-'"$timebase"')*24,' >> "$detailed_report"
             fi
             echo ']' >> "$detailed_report"
-            echo '{'"$tmp_dir/res$i1_result-$i"'};' >> "$detailed_report"
+            echo '{'"$tmp_dir/res$i1_result-$i.txt"'};' >> "$detailed_report"
             if [ "$i" -eq 1 ]; then
               legend="${legend}${zone_name} ${sensor_name},"
               num_commas=-1

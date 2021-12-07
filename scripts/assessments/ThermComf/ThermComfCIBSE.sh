@@ -2986,7 +2986,7 @@ if "$do_detailed_report"; then
         i=1
         output="$(awk -v zone="$i1_sen" -v recursion="$i" -f "$script_dir/get_singleZoneAllRecursive.awk" $opt_awk_input)"
         while [ ! "X$output" == "X" ]; do
-          echo "$output" > "$tmp_dir/sen$i0_sen-opt-$i"
+          echo "$output" > "$tmp_dir/sen$i0_sen-opt-$i.txt"
           ((i++))    
           output="$(awk -v zone="$i1_sen" -v recursion="$i" -f "$script_dir/get_singleZoneAllRecursive.awk" $opt_awk_input)"
         done
@@ -3014,7 +3014,7 @@ if "$do_detailed_report"; then
           i=1
           output="$(awk -v cols="$cols" -v recursion="$i" -f "$script_dir/get_multicolumnMaxRecursive.awk" "$tmp_dir/floor_discomfort")"
           while [ ! "X$output" == "X" ]; do
-            echo "$output" > "$tmp_dir/zon$i0_zone-floor-$i"
+            echo "$output" > "$tmp_dir/zon$i0_zone-floor-$i.txt"
             ((i++))    
             output="$(awk -v cols="$cols" -v recursion="$i" -f "$script_dir/get_multicolumnMaxRecursive.awk" "$tmp_dir/floor_discomfort")"
           done
@@ -3034,7 +3034,7 @@ if "$do_detailed_report"; then
         i=1
         output="$(awk -v zone="$i1_sen" -v recursion="$i" -f "$script_dir/get_singleZoneAllRecursive.awk" "$tmp_dir/ceiling_discomfort")"
         while [ ! "X$output" == "X" ]; do
-          echo "$output" > "$tmp_dir/sen$i0_sen-ceil-$i"
+          echo "$output" > "$tmp_dir/sen$i0_sen-ceil-$i.txt"
           ((i++))    
           output="$(awk -v zone="$i1_sen" -v recursion="$i" -f "$script_dir/get_singleZoneAllRecursive.awk" "$tmp_dir/ceiling_discomfort")"
         done
@@ -3061,7 +3061,7 @@ if "$do_detailed_report"; then
         i=1
         output="$(awk -v cols="$cols" -v recursion="$i" -f "$script_dir/get_multicolumnMaxRecursive.awk" $tmp_dir/wall_discomfort)"
         while [ ! "X$output" == "X" ]; do
-          echo "$output" > "$tmp_dir/sen$i0_sen-wall-$i"
+          echo "$output" > "$tmp_dir/sen$i0_sen-wall-$i.txt"
           ((i++))    
           output="$(awk -v cols="$cols" -v recursion="$i" -f "$script_dir/get_multicolumnMaxRecursive.awk" $tmp_dir/wall_discomfort)"
         done
@@ -3087,7 +3087,7 @@ if "$do_detailed_report"; then
             i=1
             output="$(awk -v zone="$i1_CFDsen" -v recursion="$i" -f "$script_dir/get_singleZoneAllRecursive.awk" $tmp_dir/vertdT_discomfort)"
             while [ ! "X$output" == "X" ]; do
-              echo "$output" > "$tmp_dir/sen$i0_sen-vertdT-$i"
+              echo "$output" > "$tmp_dir/sen$i0_sen-vertdT-$i.txt"
               ((i++))    
               output="$(awk -v zone="$i1_CFDsen" -v recursion="$i" -f "$script_dir/get_singleZoneAllRecursive.awk" $tmp_dir/vertdT_discomfort)"
             done
@@ -3108,7 +3108,7 @@ if "$do_detailed_report"; then
           i=1
           output="$(awk -v zone="$i1_sen" -v recursion="$i" -f "$script_dir/get_singleZoneAllRecursive.awk" $tmp_dir/draught_discomfort)"
           while [ ! "X$output" == "X" ]; do
-            echo "$output" > "$tmp_dir/sen$i0_sen-draught-$i"
+            echo "$output" > "$tmp_dir/sen$i0_sen-draught-$i.txt"
             ((i++))    
             output="$(awk -v zone="$i1_sen" -v recursion="$i" -f "$script_dir/get_singleZoneAllRecursive.awk" $tmp_dir/draught_discomfort)"
           done
@@ -3135,7 +3135,7 @@ if "$do_detailed_report"; then
         i=1
         output="$(awk -v zone="$i1_sen" -v recursion="$i" -f "$script_dir/get_singleZoneAllRecursive.awk" $DMopt_awk_input)"
         while [ ! "X$output" == "X" ]; do
-          echo "$output" > "$tmp_dir/sen$i0_sen-DMopt-$i"
+          echo "$output" > "$tmp_dir/sen$i0_sen-DMopt-$i.txt"
           ((i++))    
           output="$(awk -v zone="$i1_sen" -v recursion="$i" -f "$script_dir/get_singleZoneAllRecursive.awk" $DMopt_awk_input)"
         done
@@ -3146,7 +3146,7 @@ if "$do_detailed_report"; then
         i=1
         output="$(awk -v criteria="$DMopt_daily_drift_criteria" -v col="$i3_col" -v recursion="$i" -f "$script_dir/get_singleColumn_dailyTemperatureDriftHighlights_recursive.awk" "$tmp_dir/DMoptWO")"
         while [ ! "X$output" == "X" ]; do
-          echo "$output" > "$tmp_dir/sen$i0_sen-DMoptDailyHilite-$i"
+          echo "$output" > "$tmp_dir/sen$i0_sen-DMoptDailyHilite-$i.txt"
           ((i++))    
         output="$(awk -v criteria="$DMopt_daily_drift_criteria" -v col="$i3_col" -v recursion="$i" -f "$script_dir/get_singleColumn_dailyTemperatureDriftHighlights_recursive.awk" "$tmp_dir/DMoptWO")"
         done
@@ -3155,7 +3155,7 @@ if "$do_detailed_report"; then
         i=1
         output="$(awk -v criteria="$DMopt_weekly_drift_criteria" -v col="$i3_col" -v recursion="$i" -f "$script_dir/get_singleColumn_weeklyTemperatureDriftHighlights_recursive.awk" "$tmp_dir/DMoptWO")"
         while [ ! "X$output" == "X" ]; do
-          echo "$output" > "$tmp_dir/sen$i0_sen-DMoptWeeklyHilite-$i"
+          echo "$output" > "$tmp_dir/sen$i0_sen-DMoptWeeklyHilite-$i.txt"
           ((i++))    
         output="$(awk -v criteria="$DMopt_weekly_drift_criteria" -v col="$i3_col" -v recursion="$i" -f "$script_dir/get_singleColumn_weeklyTemperatureDriftHighlights_recursive.awk" "$tmp_dir/DMoptWO")"
         done
@@ -3810,7 +3810,7 @@ if [ "$performance_flag" -gt 0 ]; then
               echo 'x expr=(\thisrowno{0}-'"$timebase"')*24,' >> "$detailed_report"
             fi
             echo ']' >> "$detailed_report"
-            echo '{'"$tmp_dir/sen$i0_sensor-opt-$i"'};' >> "$detailed_report"
+            echo '{'"$tmp_dir/sen$i0_sensor-opt-$i.txt"'};' >> "$detailed_report"
             if [ "$i" -eq 1 ]; then
               legend="${legend}${zone_name} ${sensor_name},"
               num_commas=-1
@@ -3970,7 +3970,7 @@ if [ "$performance_flag" -gt 0 ]; then
                 echo 'x expr=(\thisrowno{0}-'"$timebase"')*24,' >> "$detailed_report"
               fi
               echo ']' >> "$detailed_report"
-              echo '{'"$tmp_dir/zon$i0_zone-floor-$i"'};' >> "$detailed_report"
+              echo '{'"$tmp_dir/zon$i0_zone-floor-$i.txt"'};' >> "$detailed_report"
               if [ "$i" -eq 1 ]; then
                 legend="${legend}${zone_name},"
                 num_commas=-1
@@ -4052,7 +4052,7 @@ if [ "$performance_flag" -gt 0 ]; then
               echo 'x expr=(\thisrowno{0}-'"$timebase"')*24,' >> "$detailed_report"
             fi
             echo ']' >> "$detailed_report"
-            echo '{'"$tmp_dir/sen$i0_sensor-ceil-$i"'};' >> "$detailed_report"
+            echo '{'"$tmp_dir/sen$i0_sensor-ceil-$i.txt"'};' >> "$detailed_report"
             if [ "$i" -eq 1 ]; then
               legend="${legend}${zone_name} ${sensor_name},"
               num_commas=-1
@@ -4133,7 +4133,7 @@ if [ "$performance_flag" -gt 0 ]; then
               echo 'x expr=(\thisrowno{0}-'"$timebase"')*24,' >> "$detailed_report"
             fi
             echo ']' >> "$detailed_report"
-            echo '{'"$tmp_dir/sen$i0_sensor-wall-$i"'};' >> "$detailed_report"
+            echo '{'"$tmp_dir/sen$i0_sensor-wall-$i.txt"'};' >> "$detailed_report"
             if [ "$i" -eq 1 ]; then
               legend="${legend}${zone_name} ${sensor_name},"
               num_commas=-1
@@ -4216,7 +4216,7 @@ if [ "$performance_flag" -gt 0 ]; then
                 echo 'x expr=(\thisrowno{0}-'"$timebase"')*24,' >> "$detailed_report"
               fi
               echo ']' >> "$detailed_report"
-              echo '{'"$tmp_dir/sen$i0_sensor-vertdT-$i"'};' >> "$detailed_report"
+              echo '{'"$tmp_dir/sen$i0_sensor-vertdT-$i.txt"'};' >> "$detailed_report"
               if [ "$i" -eq 1 ]; then
                 legend="${legend}${zone_name} ${sensor_name},"
                 num_commas=-1
@@ -4297,7 +4297,7 @@ if [ "$performance_flag" -gt 0 ]; then
                 echo 'x expr=(\thisrowno{0}-'"$timebase"')*24,' >> "$detailed_report"
               fi
               echo ']' >> "$detailed_report"
-              echo '{'"$tmp_dir/sen$i0_sensor-draught-$i"'};' >> "$detailed_report"
+              echo '{'"$tmp_dir/sen$i0_sensor-draught-$i.txt"'};' >> "$detailed_report"
               if [ "$i" -eq 1 ]; then
                 legend="${legend}${zone_name} ${sensor_name},"
                 num_commas=-1
@@ -4366,7 +4366,7 @@ if [ "$performance_flag" -gt 0 ]; then
             echo '\addplot['"color=${array_pgfColours[i0_colour]},mark=${array_pgfMarks[i0_mark]}"'] table [' >> "$detailed_report"
             echo 'x expr=(\thisrowno{0}-'"$timebase"'),' >> "$detailed_report"
             echo ']' >> "$detailed_report"
-            echo '{'"$tmp_dir/sen$i0_sensor-DMopt-$i"'};' >> "$detailed_report"
+            echo '{'"$tmp_dir/sen$i0_sensor-DMopt-$i.txt"'};' >> "$detailed_report"
             if [ "$i" -eq 1 ]; then
               legend="${legend}${zone_name} ${sensor_name},"
               num_commas=-1
@@ -4383,7 +4383,7 @@ if [ "$performance_flag" -gt 0 ]; then
             echo '\addplot['"color=${array_pgfColours[i0_colour]}"',dashed,no markers] table [' >> "$detailed_report"
             echo 'x expr=(\thisrowno{0}-'"$timebase"'),' >> "$detailed_report"
             echo ']' >> "$detailed_report"
-            echo '{'"$tmp_dir/sen$i0_sensor-DMoptDailyHilite-$i"'};' >> "$detailed_report"
+            echo '{'"$tmp_dir/sen$i0_sensor-DMoptDailyHilite-$i.txt"'};' >> "$detailed_report"
             legend="${legend},"
             ((num_commas--))
             ((i++))
@@ -4393,7 +4393,7 @@ if [ "$performance_flag" -gt 0 ]; then
             echo '\addplot['"color=${array_pgfColours[i0_colour]}"',dashed,no markers] table [' >> "$detailed_report"
             echo 'x expr=(\thisrowno{0}-'"$timebase"'),' >> "$detailed_report"
             echo ']' >> "$detailed_report"
-            echo '{'"$tmp_dir/sen$i0_sensor-DMoptWeeklyHilite-$i"'};' >> "$detailed_report"
+            echo '{'"$tmp_dir/sen$i0_sensor-DMoptWeeklyHilite-$i.txt"'};' >> "$detailed_report"
             legend="${legend},"
             ((num_commas--))
             ((i++))

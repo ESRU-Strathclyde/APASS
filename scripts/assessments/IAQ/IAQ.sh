@@ -1001,7 +1001,7 @@ if "$do_detailed_report"; then
           i=1
           output="$(awk -v zone="$i1_result" -v recursion="$i" -f "$script_dir/get_singleZoneAllRecursive.awk" "$tmp_dir/CO2.txt")"
           while [ ! "X$output" == "X" ]; do
-            echo "$output" > "$tmp_dir/res$i1_result-$i"
+            echo "$output" > "$tmp_dir/res$i1_result-$i.txt"
             ((i++))    
             output="$(awk -v zone="$i1_result" -v recursion="$i" -f "$script_dir/get_singleZoneAllRecursive.awk" "$tmp_dir/CO2.txt")"
           done
@@ -1019,7 +1019,7 @@ if "$do_detailed_report"; then
         i=1
         output="$(awk -v zone="$i1_result" -v recursion="$i" -f "$script_dir/get_singleZoneAllRecursive.awk" "$tmp_dir/CO2.txt")"
         while [ ! "X$output" == "X" ]; do
-          echo "$output" > "$tmp_dir/res$i1_result-$i"
+          echo "$output" > "$tmp_dir/res$i1_result-$i.txt"
           ((i++))    
           output="$(awk -v zone="$i1_result" -v recursion="$i" -f "$script_dir/get_singleZoneAllRecursive.awk" "$tmp_dir/CO2.txt")"
         done
@@ -1288,7 +1288,7 @@ if [ "$performance_flag" -gt 0 ]; then
     echo '' >> "$detailed_report"
   fi
 
-  rm "$tmp_dir/PTD_table" > /dev/null
+  rm "$tmp_dir/PTD_table" 1>/dev/null 2>&1
 
 # Rank order table entries.
   i0_result=0
@@ -1420,7 +1420,7 @@ if [ "$performance_flag" -gt 0 ]; then
               # Change units from g/kg to PPM
               echo 'y expr={\thisrowno{1}*1000.0},' >> "$detailed_report"
               echo ']' >> "$detailed_report"
-              echo '{'"$tmp_dir/res$i1_result-$i"'};' >> "$detailed_report"
+              echo '{'"$tmp_dir/res$i1_result-$i.txt"'};' >> "$detailed_report"
               if [ "$i" -eq 1 ]; then
                 legend="${legend}${zone_name} ${sensor_name},"
                 num_commas=-1
@@ -1461,7 +1461,7 @@ if [ "$performance_flag" -gt 0 ]; then
               # Change units from g/kg to PPM
               echo 'y expr={\thisrowno{1}*1000.0},' >> "$detailed_report"
               echo ']' >> "$detailed_report"
-              echo '{'"$tmp_dir/res$i1_result-$i"'};' >> "$detailed_report"
+              echo '{'"$tmp_dir/res$i1_result-$i.txt"'};' >> "$detailed_report"
               if [ "$i" -eq 1 ]; then
                 legend="${legend}${zone_name} ${sensor_name},"
                 num_commas=-1

@@ -27,25 +27,25 @@ BEGIN {
 }
 
 {
-  if ($0=="                       value    occurrence    value    occurrence     value  deviation") {active=1}
+  if ($0=="                                   value    occurrence    value    occurrence     value  deviation") {active=1}
   else if (active==1) {
     if (NF==0) {
       active=0
       next
     }
-    if ($3=="No" && $4=="data:") {next}
+    if ($5=="No" && $6=="data:") {next}
 
     if (mode==1) {
       if (nam==$1) {
-        max=$3
+        max=$5
         abs_max=sqrt(max^2)
-        min=$5
+        min=$7
         abs_min=sqrt(min^2)
         if (abs_max<abs_min) {
-          max_day=$6
+          max_day=$8
         }
         else {
-          max_day=$4
+          max_day=$6
         }    
         if (abs_max>cur_max) {
           cur_max=abs_max
@@ -56,15 +56,15 @@ BEGIN {
     }
     else if (mode==2) {
       if (i==entryNum) {
-        max=$3
+        max=$5
         abs_max=sqrt(max^2)
-        min=$5
+        min=$7
         abs_min=sqrt(min^2)
         if (abs_max<abs_min) {
-          max_day=$6
+          max_day=$8
         }
         else {
-          max_day=$4
+          max_day=$6
         }    
         if (abs_max>cur_max) {
           cur_max=abs_max
