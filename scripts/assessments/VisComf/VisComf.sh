@@ -765,7 +765,7 @@ c
 -
 b"
 
-    # Uncomment this to generate very quick, but low quailty views.
+#     # Uncomment this to generate very quick, but low quailty views.
 #     e2r_script="$e2r_script
 # h
 # c
@@ -831,6 +831,12 @@ b"
 ${e2r_script}
 ~
 
+# Check error code.
+  if [ "$?" -ne 0 ]; then
+    echo "Error: e2r failed." >&2
+    exit 1
+  fi
+
   cd ../rad || exit 1
 
   # We now have a bunch of rif files called "zAA.rif", 
@@ -852,14 +858,26 @@ ${e2r_script}
         # Replace sky file reference in rif file.
         sed -e 's/scene= .*\.sky/scene= '"$skyFile"'/' -i "$rifFile"
         # Generate hdr.
-        rad -v "$vp" "$rifFile" "oconv=-w" "rpict=-e $rpictout" > "$radout"
+        rad -v "$vp" "$rifFile" "oconv=-w" "rpict=-e $rpictout" > "$radout"        
+        # if [ "$?" -ne 0 ]; then
+        #   echo "Error: rad failed." >&2
+        #   exit 1
+        # fi
         mv "${zcode}_${vcode}.hdr" "${zcode}_${vcode}_${dhcode}.hdr"
         # Run findglare.
         rendopt="$(awk 'BEGIN{ORS=" "}; {print $0}' "${zcode}.opt")"
         findglare -p "${zcode}_${vcode}_${dhcode}.hdr" "$rendopt" "${zcode}.oct" > "${zcode}_${vcode}_${dhcode}.glr"
+        # if [ "$?" -ne 0 ]; then
+        #   echo "Error: findglare failed." >&2
+        #   exit 1
+        # fi
         # Assess UGR.
         ugrFile="${zcode}_${vcode}_${dhcode}.ugr"
         glarendx -t 'ugr' -h "${zcode}_${vcode}_${dhcode}.glr" > "${ugrFile}"
+        # if [ "$?" -ne 0 ]; then
+        #   echo "Error: glarendx failed." >&2
+        #   exit 1
+        # fi
         if [ ! -f "$ugrFile" ]; then
           echo "Error: failed to retrieve UGR file $ugrFile"
           exit 205
@@ -1036,10 +1054,12 @@ if "$do_detailed_report"; then
         TWD_time="${TWD#*_}"
         TWD_hour="$(echo "${TWD_time:0:2}" | awk '{sub(/^0*/,"")}1')"
         code="$(printf '%s_d%03d_h%02d' "$zvcode" "${TWD%_*}" "$((TWD_hour+1))")"
-        xglaresrc "$building_dir/../rad/${code}.hdr" "$building_dir/../rad/${code}.glr"
-        import -window "${code}.hdr" "$tmp_dir/sen${i0_sensor}-WD.pdf"
-        sleep 0.5
-        wmctrl -c "${code}.hdr"
+        echo "xvfb-run $script_dir/xvfb_com.sh $building_dir $code $tmp_dir $i0_sensor" 1>>"$tmp_dir/xvfb.out" 2>&1
+        xvfb-run -a "$script_dir/xvfb_com.sh" "$building_dir" "$code" "$tmp_dir" "$i0_sensor" 1>>"$tmp_dir/xvfb.out" 2>&1 
+        # xglaresrc "$building_dir/../rad/${code}.hdr" "$building_dir/../rad/${code}.glr"
+        # import -window "${code}.hdr" "$tmp_dir/sen${i0_sensor}-WD.pdf"
+        # sleep 0.5
+        # wmctrl -c "${code}.hdr"
         sleep 0.5
       else
         array_num_plotFiles[i0_result]=0
